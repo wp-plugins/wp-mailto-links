@@ -1,12 +1,8 @@
 /* WP Mailto Links Plugin */
 (function( w ){
 
-	w.wpml = function ( s, d, e ) {
-		w.open( 'mailto:'+ rot13( rev( s ) ) ).close();
-	};
-
-	function rev( s ){
-		return s.split( '' ).reverse().join( '' );
+	w.wpml = function ( s1, d, e ) {
+		w.open( 'mailto:'+ rot13( s1.replace( /#/g, '@' ) ) ).close();
 	};
 
 	function rot13( s ){

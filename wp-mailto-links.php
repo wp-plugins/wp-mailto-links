@@ -4,7 +4,7 @@ Plugin Name: WP Mailto Links
 Plugin URI: http://www.freelancephp.net/wp-mailto-links-plugin
 Description: Manage mailto links on your site and protect emails from spambots, set mail icon and more.
 Author: Victor Villaverde Laan
-Version: 0.10
+Version: 0.20
 Author URI: http://www.freelancephp.net
 License: Dual licensed under the MIT and GPL licenses
 */
@@ -19,7 +19,7 @@ class WP_Mailto_Links {
 	 * Current version
 	 * @var string
 	 */
-	var $version = '0.10';
+	var $version = '0.20';
 
 	/**
 	 * Used as prefix for options entry and could be used as text domain (for translations)
@@ -40,15 +40,31 @@ class WP_Mailto_Links {
 	var $options = array(
 			'convert_emails' => 1,
 			'protect' => 1,
-			'filter_whole_page' => 1,
+			'filter_body' => 1,
 			'filter_posts' => 1,
 			'filter_comments' => 1,
 			'filter_widgets' => 1,
 			'filter_rss' => 1,
+			'filter_head' => 1,
+			'protection_text' => '*protected email*',
 			'icon' => 0,
 			'no_icon_class' => 'no-mail-icon',
 			'class_name' => 'mail-link',
 		);
+
+	/**
+	 * Regexp
+	 * @var array
+	 */
+	var $regexp_patterns = array(
+		'email' => '/([^mailto\:|mailto\:"|mailto\:\'|A-Z0-9])([A-Z0-9._-]+@[A-Z0-9][A-Z0-9.-]{0,61}[A-Z0-9]\.[A-Z.]{2,6})/i',
+		'a' => '/<a[^A-Za-z](.*?)>(.*?)<\/a[\s+]*>/is',
+		'tag' => '/\[a(.*?)\](.*?)\[\/a\]/is',
+		'css' => '/<link(.*?)wp-mailto-links-css(.*?)\/>[\s+]*/is',
+		'head' => '/<head(.*?)>(.*?)<\/head[\s+]*>/is',
+		'body' => '/<body(.*?)>(.*?)<\/body[\s+]*>/is',
+	);
+
 
 	/**
 	 * PHP4 constructor
@@ -67,67 +83,16 @@ class WP_Mailto_Links {
 		// load text domain for translations
 		load_plugin_textdomain( $this->domain, dirname( __FILE__ ) . '/lang/', basename( dirname(__FILE__) ) . '/lang/' );
 
+		// set uninstall hook
+		if ( function_exists( 'register_deactivation_hook' ) )
+			register_deactivation_hook( __FILE__, array( &$this, 'deactivation' ));
+
 		// add actions
-		add_action( 'init', array( $this, 'init' ) );
 		add_action( 'admin_init', array( $this, 'admin_init' ) );
 		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 
-		// add filters
-		if ( $this->options[ 'filter_whole_page' ] ) {
-			add_action( 'wp', array( $this, 'wp' ), 1 );
-		} else {
-			// set filter priority
-			$priority = 1000000000;
-
-			// content
-			if ( $this->options[ 'filter_posts' ] ) {
-				add_filter( 'the_title', array( $this, 'filter_content' ), $priority );
-				add_filter( 'the_content', array( $this, 'filter_content' ), $priority );
-				add_filter( 'the_excerpt', array( $this, 'filter_content' ), $priority );
-				add_filter( 'get_the_excerpt', array( $this, 'filter_content' ), $priority );
-			}
-
-			// comments
-			if ( $this->options[ 'filter_comments' ] ) {
-				add_filter( 'comment_text', array( $this, 'filter_content' ), $priority );
-				add_filter( 'comment_excerpt', array( $this, 'filter_content' ), $priority );
-				add_filter( 'comment_url', array( $this, 'filter_content' ), $priority );
-				add_filter( 'get_comment_author_url', array( $this, 'filter_content' ), $priority );
-				add_filter( 'get_comment_author_link', array( $this, 'filter_content' ), $priority );
-				add_filter( 'get_comment_author_url_link', array( $this, 'filter_content' ), $priority );
-			}
-
-			// widgets ( only text widgets )
-			if ( $this->options[ 'filter_widgets' ] ) {
-				add_filter( 'widget_title', array( $this, 'filter_content' ), $priority );
-				add_filter( 'widget_text', array( $this, 'filter_content' ), $priority );
-
-				// Only if Widget Logic plugin is installed
-				// @todo Doesn't work and cannot find another way to filter all widget contents
-				//add_filter( 'widget_content', array( $this, 'filter_content' ), $priority );
-			}
-		}
-
-		// rss feed
-		if ( $this->options[ 'filter_rss' ] ) {
-			add_filter( 'the_content_rss', array( $this, 'filter_content' ), $priority );
-			add_filter( 'the_content_feed', array( $this, 'filter_content' ), $priority );
-			add_filter( 'the_excerpt_rss', array( $this, 'filter_content' ), $priority );
-			add_filter( 'comment_text_rss', array( $this, 'filter_content' ), $priority );
-		}
-
-		// set uninstall hook
-		if ( function_exists( 'register_deactivation_hook' ) )
-			register_deactivation_hook( __FILE__, array( $this, 'deactivation' ));
-	}
-
-	/**
-	 * Callback wp
-	 */
-	function wp() {
-		if ( ! is_admin() && ! is_feed() ) {
-			ob_start( array( $this, 'filter_content' ) );
-		}
+		// set filters
+		add_filter( 'pre_get_posts', array( $this, 'pre_get_posts' ), $priority );
 	}
 
 	/**
@@ -142,10 +107,33 @@ class WP_Mailto_Links {
 	}
 
 	/**
-	 * Callback init
+	 * pre_get_posts filter
+	 * @param object $query
 	 */
-	function init() {
-		if ( ! is_admin() ) {
+	function pre_get_posts( $query ) {
+		// set filter priority
+		$priority = 1000000000;
+
+		if ( is_admin() )
+			return $query;
+
+		if ( $query->is_feed ) {
+			// rss feed
+			if ( $this->options[ 'filter_rss' ] ) {
+				add_filter( 'the_title', array( $this, 'filter_protection_text' ), $priority );
+				add_filter( 'the_content', array( $this, 'filter_protection_text' ), $priority );
+				add_filter( 'the_excerpt', array( $this, 'filter_protection_text' ), $priority );
+				add_filter( 'the_title_rss', array( $this, 'filter_protection_text' ), $priority );
+				add_filter( 'the_content_rss', array( $this, 'filter_protection_text' ), $priority );
+				add_filter( 'the_excerpt_rss', array( $this, 'filter_protection_text' ), $priority );
+				add_filter( 'comment_text_rss', array( $this, 'filter_protection_text' ), $priority );
+				add_filter( 'comment_author_rss ', array( $this, 'filter_protection_text' ), $priority );
+				add_filter( 'the_category_rss ', array( $this, 'filter_protection_text' ), $priority );
+				add_filter( 'the_content_feed', array( $this, 'filter_protection_text' ), $priority );
+				add_filter( 'author feed link', array( $this, 'filter_protection_text' ), $priority );
+				add_filter( 'feed_link', array( $this, 'filter_protection_text' ), $priority );
+			}
+		} else {
 			// add stylesheet
 			wp_enqueue_style( 'wp-mailto-links', plugins_url( 'css/mailto-links.css', __FILE__ ), FALSE, $this->version );
 
@@ -153,7 +141,70 @@ class WP_Mailto_Links {
 			if ( $this->options[ 'protect' ] ) {
 				wp_enqueue_script( 'wp-mailto-links', plugins_url( 'js/mailto-links.js', __FILE__ ), array( 'jquery' ), $this->version );
 			}
+
+			if ( $this->options[ 'filter_body' ] OR $this->options[ 'filter_head' ] ) {
+				ob_start( array( $this, 'filter_page' ) );
+			}
+
+			if ( ! $this->options[ 'filter_body' ] ) {
+				// post content
+				if ( $this->options[ 'filter_posts' ] ) {
+					add_filter( 'the_title', array( $this, 'filter_content' ), $priority );
+					add_filter( 'the_content', array( $this, 'filter_content' ), $priority );
+					add_filter( 'the_excerpt', array( $this, 'filter_content' ), $priority );
+					add_filter( 'get_the_excerpt', array( $this, 'filter_content' ), $priority );
+				}
+
+				// comments
+				if ( $this->options[ 'filter_comments' ] ) {
+					add_filter( 'comment_text', array( $this, 'filter_content' ), $priority );
+					add_filter( 'comment_excerpt', array( $this, 'filter_content' ), $priority );
+					add_filter( 'comment_url', array( $this, 'filter_content' ), $priority );
+					add_filter( 'get_comment_author_url', array( $this, 'filter_content' ), $priority );
+					add_filter( 'get_comment_author_link', array( $this, 'filter_content' ), $priority );
+					add_filter( 'get_comment_author_url_link', array( $this, 'filter_content' ), $priority );
+				}
+
+				// widgets ( only text widgets )
+				if ( $this->options[ 'filter_widgets' ] ) {
+					add_filter( 'widget_title', array( $this, 'filter_content' ), $priority );
+					add_filter( 'widget_text', array( $this, 'filter_content' ), $priority );
+
+					// Only if Widget Logic plugin is installed
+					// @todo Doesn't work and cannot find another way to filter all widget contents
+					//add_filter( 'widget_content', array( $this, 'filter_content' ), $priority );
+				}
+			}
 		}
+
+		return $query;
+	}
+
+	/**
+	 * Filter complete html page
+	 * @param array $match
+	 * @return string
+	 */
+	function filter_page( $content ) {
+		// protect emails in <head> section
+		if ( $this->options[ 'filter_head' ] ) {
+			$content = preg_replace_callback( $this->regexp_patterns[ 'head' ], array( $this, '_callback_settext_filter' ), $content );
+		}
+
+		// only replace links in <body> part
+		if ( $this->options[ 'filter_body' ] ) {
+			$content = preg_replace_callback( $this->regexp_patterns[ 'body' ], array( $this, '_callback_page_filter' ), $content );
+		}
+
+		return $content;
+	}
+
+	function _callback_page_filter( $match ) {
+		return $this->filter_content( $match[ 0 ] );
+	}
+
+	function _callback_settext_filter( $match ) {
+		return $this->filter_protection_text( $match[ 0 ] );
 	}
 
 	/**
@@ -162,34 +213,40 @@ class WP_Mailto_Links {
 	 * @return string
 	 */
 	function filter_content( $content ) {
-		$email_pattern = '/([A-Z0-9._-]+@[A-Z0-9][A-Z0-9.-]{0,61}[A-Z0-9]\.[A-Z.]{2,6})/i';
-		$a_pattern = '/<[aA](.*?)>(.*?)<\/[aA][\s+]*>/i';
-		$tag_pattern = '/\[a(.*?)\](.*?)\[\/a\]/i';
-
 		// get <a> elements
-		$content = preg_replace_callback( $a_pattern, array( $this, 'parse_link' ), $content );
+		$content = preg_replace_callback( $this->regexp_patterns[ 'a' ], array( $this, 'parse_link' ), $content );
 
 		// convert plain emails
 		if ( $this->options[ 'convert_emails' ] == 1 ) {
 			// protect plain emails
-			$content = preg_replace_callback( $email_pattern, array( $this, 'get_protected_display' ), $content );
+			$content = $this->filter_protection_text( $content );
+			//$content = preg_replace_callback( $this->regexp_patterns[ 'email' ], array( $this, 'get_protected_display' ), $content );
 
 		} elseif ( $this->options[ 'convert_emails' ] == 2 ) {
 			// make mailto links from plain emails
 			// set plain emails to tags
-			$content = preg_replace( $email_pattern, '[a href="mailto:${0}"]${0}[/a]', $content );
+			$content = preg_replace( $this->regexp_patterns[ 'email' ], '${1}[a href="mailto:${2}"]${2}[/a]', $content );
 
 			// make mailto links from tags
-			$content = preg_replace_callback( $tag_pattern, array( $this, 'parse_link' ), $content );
+			$content = preg_replace_callback( $this->regexp_patterns[ 'tag' ], array( $this, 'parse_link' ), $content );
 		}
 
 		// remove style when no-icon classes are found
 		if ( strpos( $content, 'mail-icon-' ) === FALSE AND empty( $this->options[ 'protect' ] ) ) {
 			// remove style with id wp-mailto-links-css
-			$content = preg_replace( '/<link(.*?)wp-mailto-links-css(.*?)\/>[\s+]*/i', '', $content );
+			$content = preg_replace( $this->regexp_patterns[ 'css' ], '', $content );
 		}
 
 		return $content;
+	}
+
+	/**
+	 * Emails will be replaced by '*protected email*'
+	 * @param string $content
+	 * @return string
+	 */
+	function filter_protection_text( $content ) {
+		return preg_replace( $this->regexp_patterns[ 'email' ], '${1}' . __( $this->options[ 'protection_text' ], $this->domain ), $content );
 	}
 
 	/**
@@ -211,6 +268,9 @@ class WP_Mailto_Links {
 				$attrs[ 'class' ] = ( empty( $attrs[ 'class' ] ) )
 									? $icon_class
 									: $attrs[ 'class' ] .' '. $icon_class;
+
+				if ( $this->options[ 'protect' ] )
+					$attrs[ 'class' ] .= ' rtl';
 			}
 
 			// set user-defined class
@@ -226,7 +286,8 @@ class WP_Mailto_Links {
 			foreach ( $attrs AS $key => $value ) {
 				if ( $key == 'href' AND $this->options[ 'protect' ] ) {
 					$email = str_replace( 'mailto:', '', $href_tolower );
-					$value = 'javascript:wpml(\''. str_rot13( strrev( $email ) ) .'\')';
+					$protected = str_rot13( $email );
+					$value = 'javascript:wpml(\''. str_replace( '@', '#', $protected ) .'\')';
 				}
 
 				$link .= $key .'="'. $value .'" ';
@@ -284,7 +345,7 @@ class WP_Mailto_Links {
 			$offset += $interval;
 		}
 
-		$protected = '<span class="rtl">'. $protected .'</span>';
+		//$protected = '<span class="rtl">'. $protected .'</span>';
 
 		return $protected;
 	}
@@ -316,7 +377,7 @@ jQuery(function( $ ){
 		.slideUp( 600 );
 
 	// option filter whole page
-	$( 'input#filter_whole_page' )
+	$( 'input#filter_body' )
 		.change(function(){
 			var $i = $( 'input#filter_posts, input#filter_comments, input#filter_widgets' );
 
@@ -328,7 +389,18 @@ jQuery(function( $ ){
 			}
 		})
 		.change();
-})
+
+	// slide postbox
+	$( '.postbox' ).find( '.handlediv, .hndle' ).click(function(){
+		var $inside = $( this ).parent().find( '.inside' );
+
+		if ( $inside.css( 'display' ) == 'block' ) {
+			$inside.css({ display:'block' }).slideUp();
+		} else {
+			$inside.css({ display:'none' }).slideDown();
+		}
+	});
+});
 </script>
 	<div class="wrap">
 		<div class="icon32" id="icon-options-custom" style="background:url( <?php echo plugins_url( 'images/icon-wp-mailto-links.png', __FILE__ ) ?> ) no-repeat 50% 50%"><br></div>
@@ -347,18 +419,11 @@ jQuery(function( $ ){
 				<div class="handlediv" title="<?php _e( 'Click to toggle' ) ?>"><br/></div>
 				<h3 class="hndle"><?php _e( 'General Settings', $this->domain ) ?></h3>
 				<div class="inside">
+					<?php if ( is_plugin_active( 'email-encoder-bundle/email-encoder-bundle.php' ) ): ?>
+						<p class="description"><?php _e( 'Warning: "Email Encoder Bundle"-plugin is also activated, which could cause conflicts.', $this->domain ) ?></p>
+					<?php endif; ?>
 					<fieldset class="options">
 						<table class="form-table">
-						<tr>
-							<th><?php _e( 'Convert plain emails', $this->domain ) ?></th>
-							<td><label><input type="radio" id="<?php echo $this->options_name ?>[convert_emails]" name="<?php echo $this->options_name ?>[convert_emails]" value="0" <?php checked( '0', (int) $options['convert_emails'] ); ?> />
-								<span><?php _e( 'No, do nothing with plain emails', $this->domain ) ?></span></label>
-								<br/><label><input type="radio" id="<?php echo $this->options_name ?>[convert_emails]" name="<?php echo $this->options_name ?>[convert_emails]" value="1" <?php checked( '1', (int) $options['convert_emails'] ); ?> />
-								<span><?php _e( 'Yes, protect plain emails in the (selected) content', $this->domain ) ?></span></label>
-								<br/><label><input type="radio" id="<?php echo $this->options_name ?>[convert_emails]" name="<?php echo $this->options_name ?>[convert_emails]" value="2" <?php checked( '2', (int) $options['convert_emails'] ); ?> />
-								<span><?php _e( 'Yes, convert plain emails to mailto links', $this->domain ) ?></span></label>
-							</td>
-						</tr>
 						<tr>
 							<th><?php _e( 'Protect mailto links', $this->domain ) ?></th>
 							<td><label><input type="checkbox" id="<?php echo $this->options_name ?>[protect]" name="<?php echo $this->options_name ?>[protect]" value="1" <?php checked( '1', (int) $options['protect'] ); ?> />
@@ -366,9 +431,19 @@ jQuery(function( $ ){
 							</td>
 						</tr>
 						<tr>
+							<th><?php _e( 'Protect plain emails', $this->domain ) ?></th>
+							<td><label><input type="radio" id="<?php echo $this->options_name ?>[convert_emails]" name="<?php echo $this->options_name ?>[convert_emails]" value="0" <?php checked( '0', (int) $options['convert_emails'] ); ?> />
+								<span><?php _e( 'No, keep plain emails as they are', $this->domain ) ?></span></label>
+								<br/><label><input type="radio" id="<?php echo $this->options_name ?>[convert_emails]" name="<?php echo $this->options_name ?>[convert_emails]" value="1" <?php checked( '1', (int) $options['convert_emails'] ); ?> />
+								<span><?php _e( 'Yes, protect plain emails with protection text * (recommended)', $this->domain ) ?></span></label>
+								<br/><label><input type="radio" id="<?php echo $this->options_name ?>[convert_emails]" name="<?php echo $this->options_name ?>[convert_emails]" value="2" <?php checked( '2', (int) $options['convert_emails'] ); ?> />
+								<span><?php _e( 'Yes, convert plain emails to mailto links', $this->domain ) ?></span></label>
+							</td>
+						</tr>
+						<tr>
 							<th><?php _e( 'Options have effect on', $this->domain ) ?></th>
 							<td>
-								<label><input type="checkbox" name="<?php echo $this->options_name ?>[filter_whole_page]" id="filter_whole_page" value="1" <?php checked( '1', (int) $options['filter_whole_page'] ); ?> />
+								<label><input type="checkbox" name="<?php echo $this->options_name ?>[filter_body]" id="filter_body" value="1" <?php checked( '1', (int) $options['filter_body'] ); ?> />
 								<span><?php _e( 'All contents (the whole <code>&lt;body&gt;</code>)', $this->domain ) ?></span></label>
 								<br/>&nbsp;&nbsp;<label><input type="checkbox" name="<?php echo $this->options_name ?>[filter_posts]" id="filter_posts" value="1" <?php checked( '1', (int) $options['filter_posts'] ); ?> />
 										<span><?php _e( 'Post contents', $this->domain ) ?></span></label>
@@ -376,8 +451,20 @@ jQuery(function( $ ){
 										<span><?php _e( 'Comments', $this->domain ) ?></span></label>
 								<br/>&nbsp;&nbsp;<label><input type="checkbox" name="<?php echo $this->options_name ?>[filter_widgets]" id="filter_widgets" value="1" <?php checked( '1', (int) $options['filter_widgets'] ); ?> />
 										<span><?php _e( 'Text widgets', $this->domain ) ?></span></label>
-								<br/><label><input type="checkbox" name="<?php echo $this->options_name ?>[filter_rss]" id="filter_rss" value="1" <?php checked( '1', (int) $options['filter_rss'] ); ?> />
-										<span><?php _e( 'RSS feed', $this->domain ) ?></span></label>
+							</td>
+						</tr>
+						<tr>
+							<th><?php _e( 'Also protect...', $this->domain ) ?></th>
+							<td><label><input type="checkbox" name="<?php echo $this->options_name ?>[filter_head]" value="1" <?php checked('1', (int) $options['filter_head']); ?> />
+									<span><?php _e( '<code>&lt;head&gt;</code>-section by replacing emails with protection text *', $this->domain ) ?></span></label>
+								<br/><label><input type="checkbox" name="<?php echo $this->options_name ?>[filter_rss]" value="1" <?php checked('1', (int) $options['filter_rss']); ?> />
+									<span><?php _e( 'RSS feed by replacing emails with protection text *', $this->domain ) ?></span></label>
+							</td>
+						</tr>
+						<tr>
+							<th><?php _e( 'Set protection text *', $this->domain ) ?></th>
+							<td><label><input type="text" id="protection_text" name="<?php echo $this->options_name ?>[protection_text]" value="<?php echo $options['protection_text']; ?>" />
+								<span><?php _e( 'This text will be shown for protected emails', $this->domain ) ?></span></label>
 							</td>
 						</tr>
 						</table>
@@ -450,7 +537,7 @@ jQuery(function( $ ){
 					<p><?php _e( 'Manage mailto links on your site and protect emails from spambots, set mail icon and more.', $this->domain ) ?></p>
 					<ul>
 						<li><a href="http://www.freelancephp.net/contact/" target="_blank"><?php _e( 'Questions or suggestions?', $this->domain ) ?></a></li>
-						<li><?php _e( 'If you like this plugin please send your rating at WordPress.org.' ) ?></li>
+						<li><?php _e( 'If you like this plugin please send your rating at WordPress.org.', $this->domain ) ?></li>
 						<li><a href="http://wordpress.org/extend/plugins/wp-mailto-links/" target="_blank">WordPress.org</a> | <a href="http://www.freelancephp.net/wp-mailto-links-plugin/" target="_blank">FreelancePHP.net</a></li>
 					</ul>
 				</div>
@@ -463,8 +550,27 @@ jQuery(function( $ ){
 					<h4><img src="<?php echo plugins_url( 'images/icon-wp-external-links.png', __FILE__ ) ?>" width="16" height="16" /> WP External Links</h4>
 					<p><?php _e( 'Manage external links on your site: open in new window/tab, set icon, add "external", add "nofollow" and more.', $this->domain ) ?></p>
 					<ul>
-						<li><a href="<?php echo get_bloginfo( 'url' ) ?>/wp-admin/plugin-install.php?tab=search&type=term&s=WP+External+Links+freelancephp&plugin-search-input=Search+Plugins" target="_blank"><?php _e( 'Get this plugin now' ) ?></a></li>
+						<?php if ( is_plugin_active( 'wp-external-links/wp-external-links.php' ) ): ?>
+							<li><?php _e( 'This plugin is already activated.', $this->domain ) ?> <a href="<?php echo get_bloginfo( 'url' ) ?>/wp-admin/options-general.php?page=wp-external-links/wp-external-links.php"><?php _e( 'Settings' ) ?></a></li>
+						<?php elseif( file_exists( WP_PLUGIN_DIR . '/wp-external-links/wp-external-links.php' ) ): ?>
+							<li><a href="<?php echo get_bloginfo( 'url' ) ?>/wp-admin/plugins.php?plugin_status=inactive"><?php _e( 'Activate this plugin.', $this->domain ) ?></a></li>
+						<?php else: ?>
+							<li><a href="<?php echo get_bloginfo( 'url' ) ?>/wp-admin/plugin-install.php?tab=search&type=term&s=WP+External+Links+freelancephp&plugin-search-input=Search+Plugins"><?php _e( 'Get this plugin now', $this->domain ) ?></a></li>
+						<?php endif; ?>
 						<li><a href="http://wordpress.org/extend/plugins/wp-external-links/" target="_blank">WordPress.org</a> | <a href="http://www.freelancephp.net/wp-external-links-plugin/" target="_blank">FreelancePHP.net</a></li>
+					</ul>
+
+					<h4><img src="<?php echo plugins_url( 'images/icon-email-encoder-bundle.png', __FILE__ ) ?>" width="16" height="16" /> Email Encoder Bundle</h4>
+					<p><?php _e( 'Protect email addresses on your site from spambots and being used for spamming by using one of the encoding methods.', $this->domain ) ?></p>
+					<ul>
+						<?php if ( is_plugin_active( 'email-encoder-bundle/email-encoder-bundle.php' ) ): ?>
+							<li><?php _e( 'This plugin is already activated.', $this->domain ) ?> <a href="<?php echo get_bloginfo( 'url' ) ?>/wp-admin/options-general.php?page=email-encoder-bundle/email-encoder-bundle.php"><?php _e( 'Settings' ) ?></a></li>
+						<?php elseif( file_exists( WP_PLUGIN_DIR . '/email-encoder-bundle/email-encoder-bundle.php' ) ): ?>
+							<li><a href="<?php echo get_bloginfo( 'url' ) ?>/wp-admin/plugins.php?plugin_status=inactive"><?php _e( 'Activate this plugin.', $this->domain ) ?></a></li>
+						<?php else: ?>
+							<li><a href="<?php echo get_bloginfo( 'url' ) ?>/wp-admin/plugin-install.php?tab=search&type=term&s=Email+Encoder+Bundle+freelancephp&plugin-search-input=Search+Plugins"><?php _e( 'Get this plugin now', $this->domain ) ?></a></li>
+						<?php endif; ?>
+						<li><a href="http://wordpress.org/extend/plugins/email-encoder-bundle/" target="_blank">WordPress.org</a> | <a href="http://www.freelancephp.net/email-encoder-php-class-wp-plugin/" target="_blank">FreelancePHP.net</a></li>
 					</ul>
 				</div>
 			</div>
@@ -492,6 +598,16 @@ jQuery(function( $ ){
 		$saved_options = get_option( $this->options_name );
 
 		// set all options
+
+		// upgrade to 0.11
+		if ( ! isset( $saved_options[ 'protection_text' ] ) ) {
+			// set default
+			$saved_options[ 'protection_text' ] = $this->options[ 'protection_text' ];
+			$saved_options[ 'filter_head' ] = $this->options[ 'filter_head' ];
+			$saved_options[ 'filter_body' ] = $this->options[ 'filter_body' ];
+		}
+
+		// set options
 		if ( ! empty( $saved_options ) ) {
 			foreach ( $this->options AS $key => $option ) {
 				$this->options[ $key ] = $saved_options[ $key ];
