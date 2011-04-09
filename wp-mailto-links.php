@@ -285,9 +285,14 @@ class WP_Mailto_Links {
 
 			foreach ( $attrs AS $key => $value ) {
 				if ( $key == 'href' AND $this->options[ 'protect' ] ) {
+					// get email from href
 					$email = str_replace( 'mailto:', '', $href_tolower );
-					$protected = str_rot13( $email );
-					$value = 'javascript:wpml(\''. str_replace( '@', '[a]', $protected ) .'\')';
+					// decode entities
+					$email = html_entity_decode( $email );
+					// rot13 encoding
+					$email = str_rot13( $email );
+					// set href value
+					$value = 'javascript:wpml(\''. str_replace( '@', '[a]', $email ) .'\')';
 				}
 
 				$link .= $key .'="'. $value .'" ';
@@ -327,15 +332,17 @@ class WP_Mailto_Links {
 			$display = $display[ 0 ];
 
 		// first strip html tags
-		$stripped = strip_tags( $display );
+		$display = strip_tags( $display );
+		// decode entities
+		$display = html_entity_decode( $display );
 
-		$length = strlen( $stripped );
+		$length = strlen( $display );
 		$interval = ceil( min( 5, $length / 2 ) );
 		$offset = 0;
 		$dummy_content = time();
 
 		// reverse string ( will be corrected with CSS )
-		$rev = strrev( $stripped );
+		$rev = strrev( $display );
 
 		while ( $offset < $length ) {
 			// set html entities
