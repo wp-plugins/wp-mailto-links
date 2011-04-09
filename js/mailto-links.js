@@ -2,7 +2,7 @@
 (function( w ){
 
 	w.wpml = function ( s1, d, e ) {
-		w.open( 'mailto:'+ rot13( s1.replace( /#/g, '@' ) ) ).close();
+		w.open( 'mailto:'+ rot13( s1.replace( /\[a\]/g, '@' ) ) ).close();
 	};
 
 	function rot13( s ){
