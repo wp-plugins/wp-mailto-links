@@ -225,7 +225,7 @@ class WP_Mailto_Links {
 		} elseif ( $this->options[ 'convert_emails' ] == 2 ) {
 			// make mailto links from plain emails
 			// set plain emails to tags
-			$content = preg_replace( $this->regexp_patterns[ 'email' ], '${1}[a href="mailto:${2}"]${2}[/a]', $content );
+			$content = preg_replace( $this->regexp_patterns[ 'email' ], '${1}[mailto href="mailto:${2}"]${2}[/mailto]', $content );
 
 			// make mailto links from tags
 			$content = preg_replace_callback( $this->regexp_patterns[ 'tag' ], array( $this, 'parse_link' ), $content );
