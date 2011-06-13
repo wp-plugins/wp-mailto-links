@@ -2,8 +2,8 @@
 Contributors: freelancephp
 Tags: hide, email, emailaddress, mailto, link, encode, encrypt, obfuscate, email icon, javascript
 Requires at least: 2.7.0
-Tested up to: 3.1.0
-Stable tag: 0.21
+Tested up to: 3.1.3
+Stable tag: 0.22
 
 Manage mailto links on your site and protect emails from spambots, set mail icon and more.
 
@@ -41,6 +41,11 @@ Supports PHP4.3+ and up to latest WP version.
 * Title icon on Admin Options Page was made by [Aha-Soft Team](http://www.aha-soft.com/) taken form [iconfinder](http://findicons.com/icon/219920/e_mail)
 
 == Changelog ==
+
+= 0.22 =
+* Added support for widget_content filter of the Logic Widget plugin
+* Changed script attribute `language` to `type`
+* Displayed name will only be encrypted when containing emailaddress(es)
 
 = 0.21 =
 * Fixed problem of not showing the first letter

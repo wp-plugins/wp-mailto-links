@@ -4,7 +4,7 @@ Plugin Name: WP Mailto Links
 Plugin URI: http://www.freelancephp.net/wp-mailto-links-plugin
 Description: Manage mailto links on your site and protect emails from spambots, set mail icon and more.
 Author: Victor Villaverde Laan
-Version: 0.21
+Version: 0.22
 Author URI: http://www.freelancephp.net
 License: Dual licensed under the MIT and GPL licenses
 */
@@ -19,7 +19,7 @@ class WP_Mailto_Links {
 	 * Current version
 	 * @var string
 	 */
-	var $version = '0.21';
+	var $version = '0.22';
 
 	/**
 	 * Used as prefix for options entry and could be used as text domain (for translations)
@@ -38,27 +38,30 @@ class WP_Mailto_Links {
 	 * @var array
 	 */
 	var $options = array(
-			'convert_emails' => 1,
-			'protect' => 1,
-			'filter_body' => 1,
-			'filter_posts' => 1,
-			'filter_comments' => 1,
-			'filter_widgets' => 1,
-			'filter_rss' => 1,
-			'filter_head' => 1,
-			'protection_text' => '*protected email*',
-			'icon' => 0,
-			'no_icon_class' => 'no-mail-icon',
-			'class_name' => 'mail-link',
-		);
+		'convert_emails' => 1,
+		'protect' => 1,
+		'filter_body' => 1,
+		'filter_posts' => 1,
+		'filter_comments' => 1,
+		'filter_widgets' => 1,
+		'filter_rss' => 1,
+		'filter_head' => 1,
+		'protection_text' => '*protected email*',
+		'icon' => 0,
+		'no_icon_class' => 'no-mail-icon',
+		'class_name' => 'mail-link',
+		'widget_logic_filter' => 0,
+	);
 
 	/**
 	 * Regexp
 	 * @var array
 	 */
 	var $regexp_patterns = array(
-		'email' => '/([^mailto\:|mailto\:"|mailto\:\'|A-Z0-9])([A-Z0-9._-]+@[A-Z0-9][A-Z0-9.-]{0,61}[A-Z0-9]\.[A-Z.]{2,6})/i',
+		'email' => '/[A-Z0-9._-]+@[A-Z0-9][A-Z0-9.-]{0,61}[A-Z0-9]\.[A-Z.]{2,6}/i',
+		'email_2' => '/([^mailto\:|mailto\:"|mailto\:\'|A-Z0-9])([A-Z0-9._-]+@[A-Z0-9][A-Z0-9.-]{0,61}[A-Z0-9]\.[A-Z.]{2,6})/i',
 		'a' => '/<a[^A-Za-z](.*?)>(.*?)<\/a[\s+]*>/is',
+		//'a' => '/<a[^A-Za-z](.*?href=["\']mailto:.*?["\'].*?)>(.*?)<\/a[\s+]*>/is',
 		'tag' => '/\[mailto\s(.*?)\](.*?)\[\/mailto\]/is',
 		'css' => '/<link(.*?)wp-mailto-links-css(.*?)\/>[\s+]*/is',
 		'head' => '/<head(.*?)>(.*?)<\/head[\s+]*>/is',
@@ -81,11 +84,11 @@ class WP_Mailto_Links {
 		$this->_set_options();
 
 		// load text domain for translations
-		load_plugin_textdomain( $this->domain, dirname( __FILE__ ) . '/lang/', basename( dirname(__FILE__) ) . '/lang/' );
+		load_plugin_textdomain( $this->domain, FALSE, dirname( plugin_basename( __FILE__ ) ) . '/lang/' );
 
 		// set uninstall hook
 		if ( function_exists( 'register_deactivation_hook' ) )
-			register_deactivation_hook( __FILE__, array( &$this, 'deactivation' ));
+			register_deactivation_hook( __FILE__, array( $this, 'deactivation' ));
 
 		// add actions
 		add_action( 'admin_init', array( $this, 'admin_init' ) );
@@ -111,11 +114,11 @@ class WP_Mailto_Links {
 	 * @param object $query
 	 */
 	function pre_get_posts( $query ) {
-		// set filter priority
-		$priority = 1000000000;
-
 		if ( is_admin() )
 			return $query;
+
+		// set filter priority
+		$priority = 1000000000;
 
 		if ( $query->is_feed ) {
 			// rss feed
@@ -170,9 +173,8 @@ class WP_Mailto_Links {
 					add_filter( 'widget_title', array( $this, 'filter_content' ), $priority );
 					add_filter( 'widget_text', array( $this, 'filter_content' ), $priority );
 
-					// Only if Widget Logic plugin is installed
-					// @todo Doesn't work and cannot find another way to filter all widget contents
-					//add_filter( 'widget_content', array( $this, 'filter_content' ), $priority );
+					// Only if Widget Logic plugin is installed and 'widget_content' option is activated
+					add_filter( 'widget_content', array( $this, 'filter_content' ), $priority );
 				}
 			}
 		}
@@ -220,12 +222,11 @@ class WP_Mailto_Links {
 		if ( $this->options[ 'convert_emails' ] == 1 ) {
 			// protect plain emails
 			$content = $this->filter_protection_text( $content );
-			//$content = preg_replace_callback( $this->regexp_patterns[ 'email' ], array( $this, 'get_protected_display' ), $content );
 
 		} elseif ( $this->options[ 'convert_emails' ] == 2 ) {
 			// make mailto links from plain emails
 			// set plain emails to tags
-			$content = preg_replace( $this->regexp_patterns[ 'email' ], '${1}[mailto href="mailto:${2}"]${2}[/mailto]', $content );
+			$content = preg_replace( $this->regexp_patterns[ 'email_2' ], '${1}[mailto href="mailto:${2}"]${2}[/mailto]', $content );
 
 			// make mailto links from tags
 			$content = preg_replace_callback( $this->regexp_patterns[ 'tag' ], array( $this, 'parse_link' ), $content );
@@ -246,7 +247,7 @@ class WP_Mailto_Links {
 	 * @return string
 	 */
 	function filter_protection_text( $content ) {
-		return preg_replace( $this->regexp_patterns[ 'email' ], '${1}' . __( $this->options[ 'protection_text' ], $this->domain ), $content );
+		return preg_replace( $this->regexp_patterns[ 'email_2' ], '${1}' . __( $this->options[ 'protection_text' ], $this->domain ), $content );
 	}
 
 	/**
@@ -268,9 +269,6 @@ class WP_Mailto_Links {
 				$attrs[ 'class' ] = ( empty( $attrs[ 'class' ] ) )
 									? $icon_class
 									: $attrs[ 'class' ] .' '. $icon_class;
-
-//				if ( $this->options[ 'protect' ] )
-//					$attrs[ 'class' ] .= ' rtl';
 			}
 
 			// set user-defined class
@@ -302,7 +300,7 @@ class WP_Mailto_Links {
 			$link = substr( $link, 0, -1 );
 
 			$link .= '>';
-			$link .= ( $this->options[ 'protect' ] )
+			$link .= ( $this->options[ 'protect' ] AND preg_match( $this->regexp_patterns[ 'email' ], $match[ 2 ] ) > 0 )
 					? $this->get_protected_display( $match[ 2 ] )
 					: $match[ 2 ];
 			$link .= '</a>';
@@ -332,17 +330,17 @@ class WP_Mailto_Links {
 			$display = $display[ 0 ];
 
 		// first strip html tags
-		$display = strip_tags( $display );
+		$stripped_display = strip_tags( $display );
 		// decode entities
-		$display = html_entity_decode( $display );
+		$stripped_display = html_entity_decode( $stripped_display );
 
-		$length = strlen( $display );
+		$length = strlen( $stripped_display );
 		$interval = ceil( min( 5, $length / 2 ) );
 		$offset = 0;
 		$dummy_content = time();
 
 		// reverse string ( will be corrected with CSS )
-		$rev = strrev( $display );
+		$rev = strrev( $stripped_display );
 
 		while ( $offset < $length ) {
 			// set html entities
@@ -375,7 +373,7 @@ class WP_Mailto_Links {
 	 */
 	function options_page() {
 ?>
-<script language="javascript">
+<script type="text/javascript">
 jQuery(function( $ ){
 	// remove message
 	$( '.settings-error' )
@@ -458,7 +456,7 @@ jQuery(function( $ ){
 								<br/>&nbsp;&nbsp;<label><input type="checkbox" name="<?php echo $this->options_name ?>[filter_comments]" id="filter_comments" value="1" <?php checked( '1', (int) $options['filter_comments'] ); ?> />
 										<span><?php _e( 'Comments', $this->domain ) ?></span></label>
 								<br/>&nbsp;&nbsp;<label><input type="checkbox" name="<?php echo $this->options_name ?>[filter_widgets]" id="filter_widgets" value="1" <?php checked( '1', (int) $options['filter_widgets'] ); ?> />
-										<span><?php _e( 'Text widgets', $this->domain ) ?></span></label>
+										<span><?php if ( $this->options[ 'widget_logic_filter' ] ) { _e( 'All widgets (uses the <code>widget_content</code> filter of the Widget Logic plugin)', $this->domain ); } else { _e( 'All text widgets', $this->domain ); } ?></span></label>
 							</td>
 						</tr>
 						<tr>
@@ -620,6 +618,12 @@ jQuery(function( $ ){
 			foreach ( $this->options AS $key => $option ) {
 				$this->options[ $key ] = ( empty( $saved_options[ $key ] ) ) ? '' : $saved_options[ $key ];
 			}
+		}
+
+		// set widget_content filter of Widget Logic plugin
+		$widget_logic_opts = get_option( 'widget_logic' );
+		if ( is_array( $widget_logic_opts ) AND key_exists( 'widget_logic-options-filter', $widget_logic_opts ) ) {
+			$this->options[ 'widget_logic_filter' ] = ( $widget_logic_opts[ 'widget_logic-options-filter' ] == 'checked' ) ? 1 : 0;
 		}
 	}
 
