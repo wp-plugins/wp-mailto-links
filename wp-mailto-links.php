@@ -4,7 +4,7 @@ Plugin Name: WP Mailto Links
 Plugin URI: http://www.freelancephp.net/wp-mailto-links-plugin
 Description: Manage mailto links on your site and protect emails from spambots, set mail icon and more.
 Author: Victor Villaverde Laan
-Version: 0.23
+Version: 0.24
 Author URI: http://www.freelancephp.net
 License: Dual licensed under the MIT and GPL licenses
 */
@@ -19,7 +19,7 @@ class WP_Mailto_Links {
 	 * Current version
 	 * @var string
 	 */
-	var $version = '0.23';
+	var $version = '0.24';
 
 	/**
 	 * Used as prefix for options entry and could be used as text domain (for translations)
@@ -80,13 +80,6 @@ class WP_Mailto_Links {
 	function __construct() {
 		// set option values
 		$this->_set_options();
-
-		// load text domain for translations
-		load_plugin_textdomain( $this->domain, FALSE, dirname( plugin_basename( __FILE__ ) ) . '/lang/' );
-
-		// set uninstall hook
-		if ( function_exists( 'register_deactivation_hook' ) )
-			register_deactivation_hook( __FILE__, array( $this, 'deactivation' ));
 
 		// add actions
 		add_action( 'admin_init', array( $this, 'admin_init' ) );
@@ -352,12 +345,24 @@ class WP_Mailto_Links {
 	 * Callback admin_init
 	 */
 	function admin_init() {
+		global $wp_version; // @todo Make property
+
+		// load text domain for translations
+		load_plugin_textdomain( $this->domain, FALSE, dirname( plugin_basename( __FILE__ ) ) . '/lang/' );
+
+		// set deactivation hook
+		if ( function_exists( 'register_deactivation_hook' ) )
+			register_deactivation_hook( __FILE__, array( $this, 'deactivation' ));
+
 		// register settings
 		register_setting( $this->domain, $this->options_name );
 
 		// set dashboard postbox
-		wp_admin_css( 'dashboard' );
 		wp_enqueue_script( 'dashboard' );
+
+		if ( isset( $wp_version ) AND version_compare( preg_replace( '/-.*$/', '', $wp_version ), '3.3', '<' ) ) {
+			wp_admin_css( 'dashboard' );
+		}
 	}
 
 	/**
@@ -581,8 +586,8 @@ jQuery(function( $ ){
 	}
 
 	/**
-	 * Deactivation plugin method
-	 */
+	* Deactivation plugin
+	*/
 	function deactivation() {
 		delete_option( $this->options_name );
 		unregister_setting( $this->domain, $this->options_name );
@@ -618,7 +623,6 @@ jQuery(function( $ ){
 	}
 
 } // end class WP_Mailto_Links
-
 
 /**
  * Create WP_Mailto_Links instance

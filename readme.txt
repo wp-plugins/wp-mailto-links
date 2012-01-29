@@ -3,7 +3,7 @@ Contributors: freelancephp
 Tags: hide, email, emailaddress, mailto, link, encode, encrypt, obfuscate, email icon, javascript
 Requires at least: 2.7.0
 Tested up to: 3.3.1
-Stable tag: 0.23
+Stable tag: 0.24
 
 Manage mailto links on your site and protect emails from spambots, set mail icon and more.
 
@@ -43,6 +43,9 @@ Supports PHP4.3+ and up to latest WP version.
 
 == Changelog ==
 
+= 0.24 =
+* Fixed IE layout problem (WP 3.3+)
+
 = 0.23 =
 * Fixed blank page bug (WP 3.2+)
 * Fixed setting default option values
@@ -70,6 +73,9 @@ Supports PHP4.3+ and up to latest WP version.
 * First release, features: protect mailto links and plain emails , set link icon, set no-icon class and additional classes
 
 == Upgrade Notice ==
+
+= 0.24 =
+* Fixed IE layout problem (WP 3.3+)
 
 = 0.23 =
 Fixed blank page bug for WP 3.2+
