@@ -4,7 +4,7 @@ Plugin Name: WP Mailto Links
 Plugin URI: http://www.freelancephp.net/wp-mailto-links-plugin
 Description: Manage mailto links on your site and protect emails from spambots, set mail icon and more.
 Author: Victor Villaverde Laan
-Version: 0.22
+Version: 0.23
 Author URI: http://www.freelancephp.net
 License: Dual licensed under the MIT and GPL licenses
 */
@@ -19,7 +19,7 @@ class WP_Mailto_Links {
 	 * Current version
 	 * @var string
 	 */
-	var $version = '0.22';
+	var $version = '0.23';
 
 	/**
 	 * Used as prefix for options entry and could be used as text domain (for translations)
@@ -61,11 +61,9 @@ class WP_Mailto_Links {
 		'email' => '/[A-Z0-9._-]+@[A-Z0-9][A-Z0-9.-]{0,61}[A-Z0-9]\.[A-Z.]{2,6}/i',
 		'email_2' => '/([^mailto\:|mailto\:"|mailto\:\'|A-Z0-9])([A-Z0-9._-]+@[A-Z0-9][A-Z0-9.-]{0,61}[A-Z0-9]\.[A-Z.]{2,6})/i',
 		'a' => '/<a[^A-Za-z](.*?)>(.*?)<\/a[\s+]*>/is',
-		//'a' => '/<a[^A-Za-z](.*?href=["\']mailto:.*?["\'].*?)>(.*?)<\/a[\s+]*>/is',
 		'tag' => '/\[mailto\s(.*?)\](.*?)\[\/mailto\]/is',
-		'css' => '/<link(.*?)wp-mailto-links-css(.*?)\/>[\s+]*/is',
-		'head' => '/<head(.*?)>(.*?)<\/head[\s+]*>/is',
-		'body' => '/<body(.*?)>(.*?)<\/body[\s+]*>/is',
+		'head' => '/<head(>|\s(.*?)>)(.*?)<\/head[\s+]*>/is',
+		'body' => '/<body(>|\s(.*?)>)(.*?)<\/body[\s+]*>/is',
 	);
 
 
@@ -230,12 +228,6 @@ class WP_Mailto_Links {
 
 			// make mailto links from tags
 			$content = preg_replace_callback( $this->regexp_patterns[ 'tag' ], array( $this, 'parse_link' ), $content );
-		}
-
-		// remove style when no-icon classes are found
-		if ( strpos( $content, 'mail-icon-' ) === FALSE AND empty( $this->options[ 'protect' ] ) ) {
-			// remove style with id wp-mailto-links-css
-			$content = preg_replace( $this->regexp_patterns[ 'css' ], '', $content );
 		}
 
 		return $content;
@@ -415,7 +407,7 @@ jQuery(function( $ ){
 		<form method="post" action="options.php">
 			<?php
 				settings_fields( $this->domain );
-				$this->_set_options();
+//				$this->_set_options();
 				$options = $this->options;
 			?>
 
@@ -603,18 +595,16 @@ jQuery(function( $ ){
 		// set options
 		$saved_options = get_option( $this->options_name );
 
-		// set all options
-
-		// upgrade to 0.11
-		if ( ! isset( $saved_options[ 'protection_text' ] ) ) {
-			// set default
-			$saved_options[ 'protection_text' ] = $this->options[ 'protection_text' ];
-			$saved_options[ 'filter_head' ] = $this->options[ 'filter_head' ];
-			$saved_options[ 'filter_body' ] = $this->options[ 'filter_body' ];
-		}
-
 		// set options
 		if ( ! empty( $saved_options ) ) {
+			// upgrade to 0.11
+			if ( ! isset( $saved_options[ 'protection_text' ] ) ) {
+				// set default
+				$saved_options[ 'protection_text' ] = $this->options[ 'protection_text' ];
+				$saved_options[ 'filter_head' ] = $this->options[ 'filter_head' ];
+				$saved_options[ 'filter_body' ] = $this->options[ 'filter_body' ];
+			}
+
 			foreach ( $this->options AS $key => $option ) {
 				$this->options[ $key ] = ( empty( $saved_options[ $key ] ) ) ? '' : $saved_options[ $key ];
 			}
