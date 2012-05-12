@@ -1,15 +1,15 @@
 === WP Mailto Links ===
 Contributors: freelancephp
-Tags: hide, email, emailaddress, mailto, link, encode, encrypt, obfuscate, email icon, javascript
+Tags: hide, email, emailaddress, mailto, link, antispam, protect, spambot, encode, encrypt, obfuscate, email icon, javascript
 Requires at least: 2.7.0
-Tested up to: 3.3.1
-Stable tag: 0.24
+Tested up to: 3.3.2
+Stable tag: 0.30
 
-Manage mailto links on your site and protect emails from spambots, set mail icon and more.
+Protect emailaddresses and manage mailto links on your site, set mail icon and styling.
 
 == Description ==
 
-Manage mailto links and protect all emailaddresses on your site.
+Protect emailaddresses and manage mailto links on your site.
 
 = Features =
 * Protect mailto links
@@ -43,6 +43,12 @@ Supports PHP4.3+ and up to latest WP version.
 
 == Changelog ==
 
+= 0.30 =
+* Improved regular expressions
+* Fixed keep lettercase in mailto params
+* Fixed convert plain emails without dot on the end
+* Replaced code from pre_get_posts to wp action
+
 = 0.24 =
 * Fixed IE layout problem (WP 3.3+)
 
@@ -73,6 +79,10 @@ Supports PHP4.3+ and up to latest WP version.
 * First release, features: protect mailto links and plain emails , set link icon, set no-icon class and additional classes
 
 == Upgrade Notice ==
+
+= 0.30 =
+* Improved regular expressions
+* Fixed keep lettercase in mail params
 
 = 0.24 =
 * Fixed IE layout problem (WP 3.3+)

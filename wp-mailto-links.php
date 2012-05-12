@@ -4,7 +4,7 @@ Plugin Name: WP Mailto Links
 Plugin URI: http://www.freelancephp.net/wp-mailto-links-plugin
 Description: Manage mailto links on your site and protect emails from spambots, set mail icon and more.
 Author: Victor Villaverde Laan
-Version: 0.24
+Version: 0.30
 Author URI: http://www.freelancephp.net
 License: Dual licensed under the MIT and GPL licenses
 */
@@ -19,7 +19,7 @@ class WP_Mailto_Links {
 	 * Current version
 	 * @var string
 	 */
-	var $version = '0.24';
+	var $version = '0.30';
 
 	/**
 	 * Used as prefix for options entry and could be used as text domain (for translations)
@@ -58,12 +58,14 @@ class WP_Mailto_Links {
 	 * @var array
 	 */
 	var $regexp_patterns = array(
-		'email' => '/[A-Z0-9._-]+@[A-Z0-9][A-Z0-9.-]{0,61}[A-Z0-9]\.[A-Z.]{2,6}/i',
-		'email_2' => '/([^mailto\:|mailto\:"|mailto\:\'|A-Z0-9])([A-Z0-9._-]+@[A-Z0-9][A-Z0-9.-]{0,61}[A-Z0-9]\.[A-Z.]{2,6})/i',
+		// @link http://www.mkyong.com/regular-expressions/how-to-validate-email-address-with-regular-expression/
+		'email' => '/[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})/is',
+		'email_2' => '/([^mailto\:|mailto\:"|mailto\:\'|A-Z0-9])([_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,}))/i',
+		'email_3' => '/mailto\:[\s+]*([_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,}))/i',
 		'a' => '/<a[^A-Za-z](.*?)>(.*?)<\/a[\s+]*>/is',
 		'tag' => '/\[mailto\s(.*?)\](.*?)\[\/mailto\]/is',
-		'head' => '/<head(>|\s(.*?)>)(.*?)<\/head[\s+]*>/is',
-		'body' => '/<body(>|\s(.*?)>)(.*?)<\/body[\s+]*>/is',
+		'head' => '/<head(([^>]*)>)(.*?)<\/head[\s+]*>/is',
+		'body' => '/<body(([^>]*)>)(.*?)<\/body[\s+]*>/is',
 	);
 
 
@@ -84,9 +86,7 @@ class WP_Mailto_Links {
 		// add actions
 		add_action( 'admin_init', array( $this, 'admin_init' ) );
 		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
-
-		// set filters
-		add_filter( 'pre_get_posts', array( $this, 'pre_get_posts' ) );
+		add_action( 'wp', array( $this, 'wp' ) );
 	}
 
 	/**
@@ -100,32 +100,28 @@ class WP_Mailto_Links {
 		}
 	}
 
-	/**
-	 * pre_get_posts filter
-	 * @param object $query
-	 */
-	function pre_get_posts( $query ) {
+	function wp() {
 		if ( is_admin() )
-			return $query;
+			return;
 
 		// set filter priority
 		$priority = 1000000000;
 
-		if ( $query->is_feed ) {
+		if ( is_feed() ) {
 			// rss feed
 			if ( $this->options[ 'filter_rss' ] ) {
-				add_filter( 'the_title', array( $this, 'filter_protection_text' ), $priority );
-				add_filter( 'the_content', array( $this, 'filter_protection_text' ), $priority );
-				add_filter( 'the_excerpt', array( $this, 'filter_protection_text' ), $priority );
-				add_filter( 'the_title_rss', array( $this, 'filter_protection_text' ), $priority );
-				add_filter( 'the_content_rss', array( $this, 'filter_protection_text' ), $priority );
-				add_filter( 'the_excerpt_rss', array( $this, 'filter_protection_text' ), $priority );
-				add_filter( 'comment_text_rss', array( $this, 'filter_protection_text' ), $priority );
-				add_filter( 'comment_author_rss ', array( $this, 'filter_protection_text' ), $priority );
-				add_filter( 'the_category_rss ', array( $this, 'filter_protection_text' ), $priority );
-				add_filter( 'the_content_feed', array( $this, 'filter_protection_text' ), $priority );
-				add_filter( 'author feed link', array( $this, 'filter_protection_text' ), $priority );
-				add_filter( 'feed_link', array( $this, 'filter_protection_text' ), $priority );
+				add_filter( 'the_title', array( $this, 'filter_protect_rss' ), $priority );
+				add_filter( 'the_content', array( $this, 'filter_protect_rss' ), $priority );
+				add_filter( 'the_excerpt', array( $this, 'filter_protect_rss' ), $priority );
+				add_filter( 'the_title_rss', array( $this, 'filter_protect_rss' ), $priority );
+				add_filter( 'the_content_rss', array( $this, 'filter_protect_rss' ), $priority );
+				add_filter( 'the_excerpt_rss', array( $this, 'filter_protect_rss' ), $priority );
+				add_filter( 'comment_text_rss', array( $this, 'filter_protect_rss' ), $priority );
+				add_filter( 'comment_author_rss ', array( $this, 'filter_protect_rss' ), $priority );
+				add_filter( 'the_category_rss ', array( $this, 'filter_protect_rss' ), $priority );
+				add_filter( 'the_content_feed', array( $this, 'filter_protect_rss' ), $priority );
+				add_filter( 'author feed link', array( $this, 'filter_protect_rss' ), $priority );
+				add_filter( 'feed_link', array( $this, 'filter_protect_rss' ), $priority );
 			}
 		} else {
 			// add stylesheet
@@ -169,8 +165,6 @@ class WP_Mailto_Links {
 				}
 			}
 		}
-
-		return $query;
 	}
 
 	/**
@@ -179,25 +173,30 @@ class WP_Mailto_Links {
 	 * @return string
 	 */
 	function filter_page( $content ) {
-		// protect emails in <head> section
-		if ( $this->options[ 'filter_head' ] ) {
-			$content = preg_replace_callback( $this->regexp_patterns[ 'head' ], array( $this, '_callback_settext_filter' ), $content );
-		}
+		try {
+			// protect emails in <head> section
+			if ( $this->options[ 'filter_head' ] ) {
+				$content = preg_replace_callback( $this->regexp_patterns[ 'head' ], array( $this, '_callback_settext_filter' ), $content );
+			}
 
-		// only replace links in <body> part
-		if ( $this->options[ 'filter_body' ] ) {
-			$content = preg_replace_callback( $this->regexp_patterns[ 'body' ], array( $this, '_callback_page_filter' ), $content );
+			// only replace links in <body> part
+			if ( $this->options[ 'filter_body' ] ) {
+				$content = preg_replace_callback( $this->regexp_patterns[ 'body' ], array( $this, '_callback_page_filter' ), $content );
+			}
+		} catch(Exception $e) {
 		}
 
 		return $content;
 	}
 
 	function _callback_page_filter( $match ) {
-		return $this->filter_content( $match[ 0 ] );
+		$content = (count($match) > 0) ? $match[ 0 ] : '';
+		return $this->filter_content( $content );
 	}
 
 	function _callback_settext_filter( $match ) {
-		return $this->filter_protection_text( $match[ 0 ] );
+		$content = (count($match) > 0) ? $match[ 0 ] : '';
+		return $this->filter_protect_text( $content );
 	}
 
 	/**
@@ -212,7 +211,7 @@ class WP_Mailto_Links {
 		// convert plain emails
 		if ( $this->options[ 'convert_emails' ] == 1 ) {
 			// protect plain emails
-			$content = $this->filter_protection_text( $content );
+			$content = $this->filter_protect_text( $content );
 
 		} elseif ( $this->options[ 'convert_emails' ] == 2 ) {
 			// make mailto links from plain emails
@@ -231,8 +230,19 @@ class WP_Mailto_Links {
 	 * @param string $content
 	 * @return string
 	 */
-	function filter_protection_text( $content ) {
+	function filter_protect_text( $content ) {
 		return preg_replace( $this->regexp_patterns[ 'email_2' ], '${1}' . __( $this->options[ 'protection_text' ], $this->domain ), $content );
+	}
+
+	/**
+	 * Emails will be replaced by '*protected email*'
+	 * @param string $content
+	 * @return string
+	 */
+	function filter_protect_rss( $content ) {
+		$content = $this->filter_protect_text( $content );
+		$content = preg_replace( $this->regexp_patterns[ 'email_3' ], 'mailto:' . __( $this->options[ 'protection_text' ], $this->domain ), $content );
+		return $content;
 	}
 
 	/**
@@ -269,7 +279,7 @@ class WP_Mailto_Links {
 			foreach ( $attrs AS $key => $value ) {
 				if ( $key == 'href' AND $this->options[ 'protect' ] ) {
 					// get email from href
-					$email = str_replace( 'mailto:', '', $href_tolower );
+					$email = substr( $attrs[ 'href' ], 7 );
 					// decode entities
 					$email = html_entity_decode( $email );
 					// rot13 encoding
@@ -371,38 +381,24 @@ class WP_Mailto_Links {
 	function options_page() {
 ?>
 <script type="text/javascript">
-jQuery(function( $ ){
-	// remove message
-	$( '.settings-error' )
-		.hide()
-		.slideDown( 600 )
-		.delay( 3000 )
-		.slideUp( 600 );
+jQuery(function ($) {
+	$('#setting-error-settings_updated').click(function () {
+		$(this).hide();
+	});
 
 	// option filter whole page
-	$( 'input#filter_body' )
-		.change(function(){
-			var $i = $( 'input#filter_posts, input#filter_comments, input#filter_widgets' );
+	$('input#filter_body')
+		.change(function () {
+			var $i = $('input#filter_posts, input#filter_comments, input#filter_widgets');
 
-			if ( $( this ).attr( 'checked' ) ) {
-				$i.attr( 'disabled', true )
-					.attr( 'checked', true );
+			if ($(this).attr('checked')) {
+				$i.attr('disabled', true)
+					.attr('checked', true);
 			} else {
-				$i.attr( 'disabled', false )
+				$i.attr('disabled', false)
 			}
 		})
 		.change();
-
-	// slide postbox
-	$( '.postbox' ).find( '.handlediv, .hndle' ).click(function(){
-		var $inside = $( this ).parent().find( '.inside' );
-
-		if ( $inside.css( 'display' ) == 'block' ) {
-			$inside.css({ display:'block' }).slideUp();
-		} else {
-			$inside.css({ display:'none' }).slideDown();
-		}
-	});
 });
 </script>
 	<div class="wrap">
@@ -412,12 +408,12 @@ jQuery(function( $ ){
 		<form method="post" action="options.php">
 			<?php
 				settings_fields( $this->domain );
-//				$this->_set_options();
+				//$this->_set_options();
 				$options = $this->options;
 			?>
 
 		<div class="postbox-container metabox-holder meta-box-sortables" style="width:69%;">
-		<div style="margin:0 5px;">
+		<div style="margin:0 1%;">
 			<div class="postbox">
 				<div class="handlediv" title="<?php _e( 'Click to toggle' ) ?>"><br/></div>
 				<h3 class="hndle"><?php _e( 'General Settings', $this->domain ) ?></h3>
@@ -530,8 +526,8 @@ jQuery(function( $ ){
 		</div>
 		</div>
 
-		<div class="postbox-container metabox-holder meta-box-sortables" style="width:29%;">
-		<div style="margin:0 5px;">
+		<div class="postbox-container metabox-holder meta-box-sortables" style="width:28%;">
+		<div style="margin:0 2%;">
 			<div class="postbox">
 				<div class="handlediv" title="<?php _e( 'Click to toggle' ) ?>"><br/></div>
 				<h3 class="hndle"><?php _e( 'About' ) ?>...</h3>
