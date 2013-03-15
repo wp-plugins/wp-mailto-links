@@ -1,9 +1,9 @@
 === WP Mailto Links ===
 Contributors: freelancephp
 Tags: hide, email, emailaddress, mailto, link, antispam, protect, spambot, encode, encrypt, obfuscate, email icon, javascript
-Requires at least: 2.7.0
-Tested up to: 3.3.2
-Stable tag: 0.30
+Requires at least: 3.2.0
+Tested up to: 3.5.1
+Stable tag: 1.0.0
 
 Protect emailaddresses and manage mailto links on your site, set mail icon and styling.
 
@@ -18,9 +18,16 @@ Protect emailaddresses and manage mailto links on your site.
 * Set no-icon class
 * Set additional classes (for your own styling)
 
-This plugin combines the best email protection methods explained in [this article](http://perishablepress.com/press/2010/08/01/best-method-for-email-obfuscation/) by Jeff Starr.
+The plugin combines the best email protection methods explained in [this article](http://perishablepress.com/press/2010/08/01/best-method-for-email-obfuscation/) by Jeff Starr.
 
-Supports PHP4.3+ and up to latest WP version.
+= Documentation =
+See help tab on the plugin page in the WP Admin Panel.
+
+= Requirements =
+This plugin has the same [requirements](http://wordpress.org/about/requirements/) as WordPress.
+
+= Contact =
+[Send your comment](http://www.freelancephp.net/email-encoder-php-class-wp-plugin/)[ or question](http://www.freelancephp.net/contact/)
 
 == Installation ==
 
@@ -42,6 +49,14 @@ Supports PHP4.3+ and up to latest WP version.
 * Title icon on Admin Options Page was made by [Aha-Soft Team](http://www.aha-soft.com/) taken form [iconfinder](http://findicons.com/icon/219920/e_mail)
 
 == Changelog ==
+
+= 1.0.0 =
+* Added shortcode [wpml_mailto]
+* Added template functions wpml_mailto() and wpml_filter()
+* Added action hook wpml_ready
+* Added registered metaboxes with screen settings
+* Refactored code and reorganized files
+* Changed to semantic versioning from 1.0.0
 
 = 0.30 =
 * Improved regular expressions
@@ -77,21 +92,3 @@ Supports PHP4.3+ and up to latest WP version.
 
 = 0.10 =
 * First release, features: protect mailto links and plain emails , set link icon, set no-icon class and additional classes
-
-== Upgrade Notice ==
-
-= 0.30 =
-* Improved regular expressions
-* Fixed keep lettercase in mail params
-
-= 0.24 =
-* Fixed IE layout problem (WP 3.3+)
-
-= 0.23 =
-Fixed blank page bug for WP 3.2+
-
-= 0.21 =
-Fixed some essential bugs
-
-= 0.20 =
-Lots of improvements are made and bugs are fixed. Strongly recommended to upgrade.
