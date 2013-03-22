@@ -32,6 +32,7 @@
 			return;
 		}
 
+		email = email.replace('[at]', '@');
 		email = 'mailto:'+ rot13(email.replace(/\[a\]/g, '@'));
 
 		if (el.target) {

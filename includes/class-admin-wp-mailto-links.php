@@ -12,7 +12,7 @@ class Admin_WP_Mailto_Links {
 	 * Current version
 	 * @var string
 	 */
-	protected $version = '1.0.0';
+	protected $version = '1.0.1';
 
 	/**
 	 * Used as prefix for options entry and could be used as text domain (for translations)
@@ -117,7 +117,7 @@ class Admin_WP_Mailto_Links {
 		// create main menu item
 			$page_hook = add_menu_page(__('Mailto Links', $this->domain), __('Mailto Links', $this->domain),
 								'manage_options', $page, array($this, 'show_options_page'),
-								plugins_url('images/icon-wp-mailto-links-16.png', $page));
+								plugins_url('images/icon-wp-mailto-links-16.png', WP_MAILTO_LINKS_FILE));
 		} else {
 		// create submenu item under "Settings"
 			$page_hook = add_options_page(__('Mailto Links', $this->domain), __('Mailto Links', $this->domain),
@@ -190,6 +190,12 @@ class Admin_WP_Mailto_Links {
 		<div class="wrap">
 			<div class="icon32" id="icon-options-custom" style="background:url(<?php echo plugins_url('images/icon-wp-mailto-links.png', WP_MAILTO_LINKS_FILE) ?>) no-repeat 50% 50%"><br></div>
 			<h2><?php echo get_admin_page_title() ?></h2>
+
+			<?php if ($this->options['own_admin_menu'] && isset($_GET['settings-updated']) && $_GET['settings-updated'] == 'true'): ?>
+			<div class="updated settings-error" id="setting-error-settings_updated">
+				<p><strong><?php _e('Settings saved.' ) ?></strong></p>
+			</div>
+			<?php endif; ?>
 
 			<form method="post" action="options.php">
 				<?php settings_fields($this->domain); ?>

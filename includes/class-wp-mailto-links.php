@@ -17,8 +17,8 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 	 */
 	public $regexps = array(
 		// @link http://www.mkyong.com/regular-expressions/how-to-validate-email-address-with-regular-expression/
-		'email_plain' => '/([^mailto\:|mailto\:"|mailto\:\'|A-Z0-9])([_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,}))/i',
-		'email_mailto' => '/mailto\:[\s+]*([_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,}))/i',
+		'email_plain' => '/([_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,}))/i',
+		'email_mailto' => '/mailto\:[\s+]*([_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,}))/i',
 		'<a>' => '/<a[^A-Za-z](.*?)>(.*?)<\/a[\s+]*>/is',
 		'<head>' => '/<head(([^>]*)>)(.*?)<\/head[\s+]*>/is',
 		'<body>' => '/<body(([^>]*)>)(.*?)<\/body[\s+]*>/is',
@@ -161,13 +161,19 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 
 		} elseif ($this->options['convert_emails'] == 2) {
 			// make mailto links from plain emails
-			// set plain emails to tags
-			$content = preg_replace($this->regexps['email_plain'], '${1}[wpml_mailto href="mailto:${2}"]${2}[/wpml_mailto]', $content);
-
-			do_shortcode($content);
+			$content = preg_replace_callback($this->regexps['email_plain'], array($this, 'callback_convert_plain_email'), $content);
 		}
 
 		return $content;
+	}
+
+	/**
+	 * Convert plain email to protected mailto link
+	 * @param array $match
+	 * @return string
+	 */
+	public function callback_convert_plain_email($match) {
+		return $this->protected_mailto($match[0], array('href' => 'mailto:' . $match[0]));
 	}
 
 	/**
@@ -239,9 +245,7 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 	 * @return string
 	 */
 	public function protected_mailto($display, $attrs = array()) {
-		$class_ori = (empty($attrs['class']))
-						? ''
-						: $attrs['class'];
+		$class_ori = (empty($attrs['class'])) ? '' : $attrs['class'];
 
 		// set icon class, unless no-icon class isset or another icon class ('mail-icon-...') is found
 		if ($this->options['icon'] > 0 && (empty($this->options['no_icon_class']) || strpos($class_ori, $this->options['no_icon_class']) === FALSE) && strpos($class_ori, 'mail-icon-') === FALSE) {
@@ -270,6 +274,8 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 				$email = html_entity_decode($email);
 				// rot13 encoding
 				$email = str_rot13($email);
+				// replace @
+				$email = str_replace('@', '[at]', $email);
 
 				// set attrs
 				$link .= 'href="javascript:;" ';
@@ -319,6 +325,7 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 		$interval = ceil(min(5, $length / 2));
 		$offset = 0;
 		$dummy_content = time();
+		$protected = '';
 
 		// reverse string ( will be corrected with CSS )
 		$rev = strrev($stripped_display);

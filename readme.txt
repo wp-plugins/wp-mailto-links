@@ -38,6 +38,10 @@ This plugin has the same [requirements](http://wordpress.org/about/requirements/
 
 == Frequently Asked Questions ==
 
+= Shortcode does not work in widget =
+By default shortcodes are not applied to (text) widgets. To support that you can add it to the text widget filter ([for more](http://www.wprecipes.com/how-to-add-shortcodes-in-sidebar-widgets)).
+If you are not a coder, then just activate [this plugin](http://wordpress.org/extend/plugins/shortcodes-in-sidebar-widgets/), which does the same thing.
+
 [Do you have a question? Please ask me](http://www.freelancephp.net/contact/)
 
 == Screenshots ==
@@ -49,6 +53,14 @@ This plugin has the same [requirements](http://wordpress.org/about/requirements/
 * Title icon on Admin Options Page was made by [Aha-Soft Team](http://www.aha-soft.com/) taken form [iconfinder](http://findicons.com/icon/219920/e_mail)
 
 == Changelog ==
+
+= 1.0.1 =
+* Fixed bug in regexp plain email
+* Fixed bug shortcode not working
+* Fixed bug - sign in email addresses
+* Fixed defined var $protected
+* Fixed icon in admin menu
+* Fixed update message in admin
 
 = 1.0.0 =
 * Added shortcode [wpml_mailto]
