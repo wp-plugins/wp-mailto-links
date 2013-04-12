@@ -31,13 +31,21 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 		parent::__construct();
 
 		// add actions
-		add_action('wp', array($this, 'wp'));
+		add_action('wp', array($this, 'wp_site'));
 	}
 
+	/* -------------------------------------------------------------------------
+	 *  Filter Callbacks
+	 * -------------------------------------------------------------------------*/
+
 	/**
-	 * WP action
+	 * Callbacks for wp site
 	 */
-	public function wp() {
+	public function wp_site() {
+		if (is_admin()) {
+			return;
+		}
+
 		if (is_feed()) {
 		// rss feed
 			if ($this->options['filter_rss']) {
@@ -60,6 +68,9 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 
 			if ($this->options['filter_body'] || $this->options['filter_head']) {
 				ob_start(array($this, 'callback_filter_page'));
+
+				// set ob flush
+				add_action('wp_footer', 'callback_flush_buffer');
 			}
 
 			if (!$this->options['filter_body']) {
@@ -93,9 +104,16 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 		do_action('wpml_ready', array($this, 'callback_filter_content'), $this);
 	}
 
+	/**
+	 * End output buffer
+	 */
+	public function callback_flush_buffer() {
+		ob_end_flush();
+	}
+
 	/* -------------------------------------------------------------------------
 	 *  Filter Callbacks
-	 * -------------------------------------------------------------------------/
+	 * -------------------------------------------------------------------------*/
 
 	/**
 	 * Filter complete <html>
@@ -103,20 +121,28 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 	 * @return string
 	 */
 	public function callback_filter_page($content) {
+		$filtered = $content;
+
 		try {
 			// protect emails in <head> section
 			if ($this->options['filter_head']) {
-				$content = preg_replace_callback($this->regexps['<head>'], array($this, 'callback_filter_head'), $content);
+				$filtered = preg_replace_callback($this->regexps['<head>'], array($this, 'callback_filter_head'), $filtered);
 			}
 
 			// only replace links in <body> part
 			if ($this->options['filter_body']) {
-				$content = preg_replace_callback($this->regexps['<body>'], array($this, 'callback_filter_body'), $content);
+				$filtered = preg_replace_callback($this->regexps['<body>'], array($this, 'callback_filter_body'), $filtered);
 			}
 		} catch(Exception $e) {
+			return $content;
 		}
 
-		return $content;
+		// when no filtered content
+		if (!$filtered || strlen(trim($filtered)) === 0) {
+			return $content;
+		}
+
+		return $filtered;
 	}
 
 	/**
@@ -151,20 +177,27 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 	 * @return string
 	 */
 	public function callback_filter_content($content) {
+		$filtered = $content;
+
 		// get <a> elements
-		$content = preg_replace_callback($this->regexps['<a>'], array($this, 'parse_link'), $content);
+		$filtered = preg_replace_callback($this->regexps['<a>'], array($this, 'parse_link'), $filtered);
 
 		// convert plain emails
 		if ($this->options['convert_emails'] == 1) {
 			// protect plain emails
-			$content = $this->replace_plain_emails($content);
+			$filtered = $this->replace_plain_emails($filtered);
 
 		} elseif ($this->options['convert_emails'] == 2) {
 			// make mailto links from plain emails
-			$content = preg_replace_callback($this->regexps['email_plain'], array($this, 'callback_convert_plain_email'), $content);
+			$filtered = preg_replace_callback($this->regexps['email_plain'], array($this, 'callback_convert_plain_email'), $filtered);
 		}
 
-		return $content;
+		// when no filtered content
+		if (!$filtered || strlen(trim($filtered)) === 0) {
+			return $content;
+		}
+
+		return $filtered;
 	}
 
 	/**
@@ -198,7 +231,7 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 
 	/* -------------------------------------------------------------------------
 	 *  Shortcode Functions
-	 * -------------------------------------------------------------------------/
+	 * -------------------------------------------------------------------------*/
 
 	/**
 	 * Shortcode protected mailto link
@@ -216,7 +249,7 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 
 	/* -------------------------------------------------------------------------
 	 *  Link Functions
-	 * -------------------------------------------------------------------------/
+	 * -------------------------------------------------------------------------*/
 
 	/**
 	 * Make a clean <a> code
