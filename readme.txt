@@ -30,7 +30,7 @@ This plugin has the same [requirements](http://wordpress.org/about/requirements/
 Does the plugin not work as it should, please report the bug in the [support section](http://wordpress.org/support/plugin/wp-mailto-links).
 You can also [post a comment](http://www.freelancephp.net/email-encoder-php-class-wp-plugin/) on my blog or [send me a mail](http://www.freelancephp.net/contact/).
 
-This plugin is free. If you like to contribute, please send your rating.
+This plugin is free. Please show your appreciation by rating this plugin.
 
 == Installation ==
 
@@ -43,10 +43,12 @@ This plugin is free. If you like to contribute, please send your rating.
 
 = Shortcode does not work in widgets. How can I make it work? =
 By default shortcodes are not applied to (text) widgets. To support that you can add it to the text widget filter ([for more](http://www.wprecipes.com/how-to-add-shortcodes-in-sidebar-widgets)).
+
 If you are not a coder, then just activate [this plugin](http://wordpress.org/extend/plugins/shortcodes-in-sidebar-widgets/), which does the same thing.
 
 = I got a blank page on my site. What to do about it? =
 There have been some reports of blank pages, sometimes in combination with other plugins. It has probably to do with filtering the whole html page. Try disable in the admin panel the option "Options have effect" > "All contents"  (keep in mind that not the whole page will be scanned for protecting emails). Please report it.
+
 An alternative is using my other plugin for protecting your email addresses [Email Encoder Bundle](http://wordpress.org/extend/plugins/email-encoder-bundle/). This plugin has a different approach with different features, but much more stable.
 
 [Do you have a question? Please ask me](http://www.freelancephp.net/contact/)
