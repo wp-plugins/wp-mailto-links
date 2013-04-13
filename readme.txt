@@ -21,16 +21,36 @@ Protect emailaddresses and manage mailto links on your site.
 The plugin combines the best email protection methods explained in [this article](http://perishablepress.com/press/2010/08/01/best-method-for-email-obfuscation/) by Jeff Starr.
 
 = Documentation =
-See help tab on the plugin page in the WP Admin Panel.
+The plugin sets by default the right options for protecting your emails. Optionally you can also set some style options, like adding an icon.
 
-= Requirements =
+Automatically all mailto links will be scanned and protected, but you could also use a shortcode:
+`[wpml_mailto href="info@myemail.com"]My Email[/wpml_mailto]`
+
+To create a protected mailto link in your template use this function:
+`<?php if (function_exists('wpml_mailto')) { echo wpml_mailto($display, [$attrs]); } ?>`
+
+The plugin also has a hook when ready, f.e. to add extra filters:
+`function extra_filters($filter_callback, $object) {
+	add_filter('some_filter', $filter_callback);
+}
+add_action('wpml_ready', 'extra_filters');`
+
+For more documentation see help tab on the options page in the WP Admin Panel.
+
+= Support =
+Having problems? Just take a look at the [FAQ](http://wordpress.org/extend/plugins/wp-mailto-links/faq/) or report in the [support section](http://wordpress.org/support/plugin/wp-mailto-links).
+
 This plugin has the same [requirements](http://wordpress.org/about/requirements/) as WordPress.
 
-= Contact =
-Does the plugin not work as it should, please report the bug in the [support section](http://wordpress.org/support/plugin/wp-mailto-links).
-You can also [post a comment](http://www.freelancephp.net/email-encoder-php-class-wp-plugin/) on my blog or [send me a mail](http://www.freelancephp.net/contact/).
+= Like this plugin? =
+This plugin is completely free and does not need any donations. If you want to contribute you can do one of these actions:
 
-This plugin is free. Please show your appreciation by rating this plugin.
+* Show your appreciation by rating this plugin
+* Click on a vote button of compatibility ("Works"/"Broken")
+* [Post a comment](http://www.freelancephp.net/email-encoder-php-class-wp-plugin/) on my blog
+
+= Contact =
+You can send me a mail by using [this contactform](http://www.freelancephp.net/contact/).
 
 == Installation ==
 
@@ -49,7 +69,7 @@ If you are not a coder, then just activate [this plugin](http://wordpress.org/ex
 = I got a blank page on my site. What to do about it? =
 There have been some reports of blank pages, sometimes in combination with other plugins. It has probably to do with filtering the whole html page. Try disable in the admin panel the option "Options have effect" > "All contents"  (keep in mind that not the whole page will be scanned for protecting emails). Please report it.
 
-An alternative is using my other plugin for protecting your email addresses [Email Encoder Bundle](http://wordpress.org/extend/plugins/email-encoder-bundle/). This plugin has a different approach with different features, but much more stable.
+An alternative is using my other plugin for protecting your email addresses [Email Encoder Bundle](http://wordpress.org/extend/plugins/email-encoder-bundle/). This plugin has a different approach and does not have the option to scan the whole page, which makes it more stable.
 
 [Do you have a question? Please ask me](http://www.freelancephp.net/contact/)
 
