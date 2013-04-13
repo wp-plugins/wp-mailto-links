@@ -39,18 +39,16 @@ For more documentation see help tab on the options page in the WP Admin Panel.
 
 = Support =
 Having problems? Just take a look at the [FAQ](http://wordpress.org/extend/plugins/wp-mailto-links/faq/) or report in the [support section](http://wordpress.org/support/plugin/wp-mailto-links).
-
 This plugin has the same [requirements](http://wordpress.org/about/requirements/) as WordPress.
 
 = Like this plugin? =
 This plugin is completely free and does not need any donations. If you want to contribute you can do one of these actions:
-
 * Show your appreciation by rating this plugin
-* Click on a vote button of compatibility ("Works"/"Broken")
+* Click on a vote button of compatibility ("Works" / "Broken")
 * [Post a comment](http://www.freelancephp.net/email-encoder-php-class-wp-plugin/) on my blog
 
 = Contact =
-You can send me a mail by using [this contactform](http://www.freelancephp.net/contact/).
+You can send me a mail with [this contactform](http://www.freelancephp.net/contact/).
 
 == Installation ==
 
