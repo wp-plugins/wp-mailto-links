@@ -22,6 +22,7 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 		'<a>' => '/<a[^A-Za-z](.*?)>(.*?)<\/a[\s+]*>/is',
 		'<head>' => '/<head(([^>]*)>)(.*?)<\/head[\s+]*>/is',
 		'<body>' => '/<body(([^>]*)>)(.*?)<\/body[\s+]*>/is',
+		'<img>' => '/<img([^>]*)>/is',
 	);
 
 	/**
@@ -70,7 +71,7 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 				ob_start(array($this, 'callback_filter_page'));
 
 				// set ob flush
-				add_action('wp_footer', 'callback_flush_buffer');
+				add_action('wp_footer', array($this, 'callback_flush_buffer'));
 			}
 
 			if (!$this->options['filter_body']) {

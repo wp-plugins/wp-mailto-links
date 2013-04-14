@@ -442,10 +442,10 @@ SHORTCODES;
 		} elseif ($key === 'templatefunctions') {
 			$content = <<<TEMPLATEFUNCTIONS
 <p>Create a protected mailto link:
-<br/><code><&#63;php echo wpml_mailto(\$display, [\$attrs]); &#63;></code>
+<br/><code><&#63;php if (function_exists('wpml_mailto')) { echo wpml_mailto(\$display, [\$attrs]); } &#63;></code>
 </p>
 <p>Filter given content to protect mailto links, shortcodes and plain emails (according to the settings in admin):
-<br/><code><&#63;php echo wpml_filter(\$content); &#63;></code>
+<br/><code><&#63;php if (function_exists('wpml_filter')) { echo wpml_filter(\$content); } &#63;></code>
 </p>
 TEMPLATEFUNCTIONS;
 		} elseif ($key === 'hooks') {

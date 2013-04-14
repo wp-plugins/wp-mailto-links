@@ -3,20 +3,20 @@ Contributors: freelancephp
 Tags: hide, email, emailaddress, mailto, link, antispam, protect, spambot, encode, encrypt, obfuscate, email icon, javascript
 Requires at least: 3.2.0
 Tested up to: 3.5.1
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 
-Protect emailaddresses and manage mailto links on your site, set mail icon and styling.
+Protect email addresses (automatically) and manage mailto links on your site, set mail icon, styling and more.
 
 == Description ==
 
-Protect emailaddresses and manage mailto links on your site.
+Protect email addresses (automatically) and manage mailto links on your site, set mail icon, styling and more.
 
 = Features =
-* Protect mailto links
+* Protect mailto links (also without using shortcode)
 * Protect plain emailaddresses or convert them to mailto links
-* Set link icon
-* Set no-icon class
+* Set mail icon
 * Set additional classes (for your own styling)
+* Set no-icon class
 
 The plugin combines the best email protection methods explained in [this article](http://perishablepress.com/press/2010/08/01/best-method-for-email-obfuscation/) by Jeff Starr.
 
@@ -81,8 +81,12 @@ An alternative is using my other plugin for protecting your email addresses [Ema
 
 == Changelog ==
 
+= 1.0.3 =
+* Fixed php warning "call_user_func_array() expects parameter 1.."
+
 = 1.0.2 =
 * Fixed blank page bug on post edit (admin)
+* Added ob_end_flush to the wp_footer filter
 
 = 1.0.1 =
 * Fixed bug in regexp plain email
