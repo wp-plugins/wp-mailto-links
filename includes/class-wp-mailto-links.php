@@ -71,7 +71,7 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 				ob_start(array($this, 'callback_filter_page'));
 
 				// set ob flush
-				add_action('wp_footer', array($this, 'callback_flush_buffer'));
+//				add_action('wp_footer', array($this, 'callback_flush_buffer'), 10);
 			}
 
 			if (!$this->options['filter_body']) {
