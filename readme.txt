@@ -3,7 +3,7 @@ Contributors: freelancephp
 Tags: hide, email, emailaddress, mailto, link, antispam, protect, spambot, encode, encrypt, obfuscate, email icon, javascript
 Requires at least: 3.2.0
 Tested up to: 3.5.1
-Stable tag: 1.0.4
+Stable tag: 1.0.3
 
 Protect email addresses (automatically) and manage mailto links on your site, set mail icon, styling and more.
 
