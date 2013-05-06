@@ -20,9 +20,8 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 		'email_plain' => '/([_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,}))/i',
 		'email_mailto' => '/mailto\:[\s+]*([_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,}))/i',
 		'<a>' => '/<a[^A-Za-z](.*?)>(.*?)<\/a[\s+]*>/is',
-		'<head>' => '/<head(([^>]*)>)(.*?)<\/head[\s+]*>/is',
-		'<body>' => '/<body(([^>]*)>)(.*?)<\/body[\s+]*>/is',
 		'<img>' => '/<img([^>]*)>/is',
+		'<body>' => '/(<body(([^>]*)>))/is',
 	);
 
 	/**
@@ -32,7 +31,7 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 		parent::__construct();
 
 		// add actions
-		add_action('wp', array($this, 'wp_site'));
+		add_action('wp', array($this, 'wp_site'), 10);
 	}
 
 	/* -------------------------------------------------------------------------
@@ -71,7 +70,7 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 				ob_start(array($this, 'callback_filter_page'));
 
 				// set ob flush
-//				add_action('wp_footer', array($this, 'callback_flush_buffer'), 10);
+				add_action('wp_footer', array($this, 'callback_flush_buffer'), 10000);
 			}
 
 			if (!$this->options['filter_body']) {
@@ -124,18 +123,24 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 	public function callback_filter_page($content) {
 		$filtered = $content;
 
-		try {
+		$html_split = preg_split($this->regexps['<body>'], $filtered, null, PREG_SPLIT_DELIM_CAPTURE);
+
+		if (count($html_split) >= 4) {
 			// protect emails in <head> section
 			if ($this->options['filter_head']) {
-				$filtered = preg_replace_callback($this->regexps['<head>'], array($this, 'callback_filter_head'), $filtered);
+				$head_filtered = $this->callback_filter_body(array($html_split[0]));
+			} else {
+				$head_filtered = $html_split[0];
 			}
 
 			// only replace links in <body> part
 			if ($this->options['filter_body']) {
-				$filtered = preg_replace_callback($this->regexps['<body>'], array($this, 'callback_filter_body'), $filtered);
+				$body_filtered = $this->callback_filter_body(array($html_split[4]));
+			} else {
+				$body_filtered = $html_split[4];
 			}
-		} catch(Exception $e) {
-			return $content;
+
+			$filtered = $head_filtered . $html_split[1] . $body_filtered;
 		}
 
 		// when no filtered content
@@ -227,7 +232,7 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 	 * @return string
 	 */
 	public function replace_plain_emails($content) {
-		return preg_replace($this->regexps['email_plain'], '${1}' . __($this->options['protection_text'], $this->domain), $content);
+		return preg_replace($this->regexps['email_plain'], __($this->options['protection_text'], $this->domain), $content);
 	}
 
 	/* -------------------------------------------------------------------------
@@ -279,6 +284,7 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 	 * @return string
 	 */
 	public function protected_mailto($display, $attrs = array()) {
+		$email = null;
 		$class_ori = (empty($attrs['class'])) ? '' : $attrs['class'];
 
 		// set icon class, unless no-icon class isset or another icon class ('mail-icon-...') is found
@@ -327,6 +333,9 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 				? $this->get_protected_display($display)
 				: $display;
 		$link .= '</a>';
+
+		// filter
+		$link = apply_filters('wpml_mailto', $link, $display, $email, $attrs);
 
 		return $link;
 	}

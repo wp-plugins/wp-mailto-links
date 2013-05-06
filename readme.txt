@@ -3,52 +3,43 @@ Contributors: freelancephp
 Tags: hide, email, emailaddress, mailto, link, antispam, protect, spambot, encode, encrypt, obfuscate, email icon, javascript
 Requires at least: 3.2.0
 Tested up to: 3.5.1
-Stable tag: 1.0.3
+Stable tag: 1.1.0
 
-Protect email addresses (automatically) and manage mailto links on your site, set mail icon, styling and more.
+Protect email addresses and mailto links from spambots and being used for spamming. Easy to use without configuration.
 
 == Description ==
-
-Protect email addresses (automatically) and manage mailto links on your site, set mail icon, styling and more.
+Protect your email addresses (automatically) and manage mailto links on your site, set mail icon, styling and more.
 
 = Features =
-* Protect mailto links (also without using shortcode)
+* Protect mailto links (automatically or shortcode)
 * Protect plain emailaddresses or convert them to mailto links
 * Set mail icon
-* Set additional classes (for your own styling)
+* Set classes (for your own styling)
 * Set no-icon class
 
 The plugin combines the best email protection methods explained in [this article](http://perishablepress.com/press/2010/08/01/best-method-for-email-obfuscation/) by Jeff Starr.
 
-= Documentation =
-The plugin sets by default the right options for protecting your emails. Optionally you can also set some style options, like adding an icon.
+= Easy to use =
+After activating the plugin all options are already set for protecting your emails and mailto links. Optionally you can also set some style options, like adding an icon.
 
-Automatically all mailto links will be scanned and protected, but you could also use a shortcode:
+Although the plugin can scan mailto links automatically, you could also use the shortcode:
 `[wpml_mailto href="info@myemail.com"]My Email[/wpml_mailto]`
 
-To create a protected mailto link in your template use this function:
-`<?php if (function_exists('wpml_mailto')) { echo wpml_mailto($display, [$attrs]); } ?>`
-
-The plugin also has a hook when ready, f.e. to add extra filters:
-`function extra_filters($filter_callback, $object) {
-	add_filter('some_filter', $filter_callback);
-}
-add_action('wpml_ready', 'extra_filters');`
-
-For more documentation see help tab on the options page in the WP Admin Panel.
+[See more documentation](http://wordpress.org/extend/plugins/wp-mailto-links/other_notes/).
 
 = Support =
-Having problems? Just take a look at the [FAQ](http://wordpress.org/extend/plugins/wp-mailto-links/faq/) or report in the [support section](http://wordpress.org/support/plugin/wp-mailto-links).
 This plugin has the same [requirements](http://wordpress.org/about/requirements/) as WordPress.
-
-= Like this plugin? =
-This plugin is completely free and does not need any donations. If you want to contribute you can do one of these actions:
-* Show your appreciation by rating this plugin
-* Click on a vote button of compatibility ("Works" / "Broken")
-* [Post a comment](http://www.freelancephp.net/email-encoder-php-class-wp-plugin/) on my blog
+If you are experiencing any problems, just take a look at the [FAQ](http://wordpress.org/extend/plugins/wp-mailto-links/faq/) or report it in the [support section](http://wordpress.org/support/plugin/wp-mailto-links).
 
 = Contact =
 You can send me a mail with [this contactform](http://www.freelancephp.net/contact/).
+
+= Like this plugin? =
+This plugin is completely free and does not need any donations. If you want to contribute you can do one of these actions:
+
+* Show your appreciation by rating this plugin
+* Click on a vote button of compatibility ("Works" / "Broken")
+* [Post a comment](http://www.freelancephp.net/email-encoder-php-class-wp-plugin/) on my blog
 
 == Installation ==
 
@@ -56,6 +47,7 @@ You can send me a mail with [this contactform](http://www.freelancephp.net/conta
 1. Click on the button `Add new`
 1. Search for `WP Mailto Links` and click 'Install Now' or click on the `upload` link to upload `wp-mailto-links.zip`
 1. Click on `Activate plugin`
+1. The plugin sets by default the right options for protecting your emails. All mailto links will automatically be scanned and protected.
 
 == Frequently Asked Questions ==
 
@@ -78,8 +70,37 @@ An alternative is using my other plugin for protecting your email addresses [Ema
 
 = Credits =
 * Title icon on Admin Options Page was made by [Aha-Soft Team](http://www.aha-soft.com/) taken form [iconfinder](http://findicons.com/icon/219920/e_mail)
+* Technics used in this plugin is inspired by the methods Jeff Starr explained in [this article](http://perishablepress.com/press/2010/08/01/best-method-for-email-obfuscation/)
+
+== Documentation ==
+
+= Template functions =
+To create a protected mailto link in your template use:
+`<?php if (function_exists('wpml_mailto')) { echo wpml_mailto($display, $attrs); } ?>`
+
+= Action hook =
+The plugin also has a hook when ready, f.e. to add extra filters:
+`function extra_filters($filter_callback, $object) {
+	add_filter('some_filter', $filter_callback);
+}
+add_action('wpml_ready', 'extra_filters');`
+
+= Filter hook =
+The wpml_mailto filter gives you the possibility to manipulate output of the mailto created by the plugin. F.e. make all mailto links bold:
+`public function special_mailto($link, $display, $email, $attrs) {
+	return '<b>'. $link .'</b>';
+}
+add_filter('wpml_mailto', 'special_mailto', 10, 4);`
+
+Now all mailto links will be wrapped around a `<b>`-tag.
 
 == Changelog ==
+
+= 1.1.0 =
+* Added apply filter "wmpl_mailto"
+* Changed filter_page method using only one regular expressions
+* Added ob_end_flush to the wp_footer filter
+* Fixed bug replacing plain emailaddresses
 
 = 1.0.3 =
 * Fixed php warning "call_user_func_array() expects parameter 1.."
@@ -100,7 +121,7 @@ An alternative is using my other plugin for protecting your email addresses [Ema
 = 1.0.0 =
 * Added shortcode [wpml_mailto]
 * Added template functions wpml_mailto() and wpml_filter()
-* Added action hook wpml_ready
+* Added action hook "wpml_ready"
 * Added registered metaboxes with screen settings
 * Refactored code and reorganized files
 * Changed to semantic versioning from 1.0.0

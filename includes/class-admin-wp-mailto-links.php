@@ -12,7 +12,7 @@ class Admin_WP_Mailto_Links {
 	 * Current version
 	 * @var string
 	 */
-	protected $version = '1.0.1';
+	protected $version = '1.1.0';
 
 	/**
 	 * Used as prefix for options entry and could be used as text domain (for translations)
@@ -67,13 +67,15 @@ class Admin_WP_Mailto_Links {
 	/**
 	 * Set options from save values or defaults
 	 */
-	private function set_options() {
-		// set options
-		$saved_options = get_option($this->options_name);
+	private function set_options($saved_options = null) {
+		if ($saved_options === null) {
+			// set options
+			$saved_options = get_option($this->options_name);
 
-		// backwards compatible (old values)
-		if (empty($saved_options)) {
-			$saved_options = get_option($this->domain . 'options');
+			// backwards compatible (old values)
+			if (empty($saved_options)) {
+				$saved_options = get_option($this->domain . 'options');
+			}
 		}
 
 		// set all options
@@ -91,8 +93,21 @@ class Admin_WP_Mailto_Links {
 	}
 
 	/**
-	* Deactivation plugin
-	*/
+	 * Method for test purpuses
+	 */
+	public function __options($values = null) {
+		if (class_exists('Test_WP_Mailto_Links')) {
+			if ($values !== null) {
+				$this->set_options($values);
+			}
+
+			return $this->options;
+		}
+	}
+
+	/**
+	 * Deactivation plugin
+	 */
 	public function deactivation() {
 		delete_option($this->options_name);
 		unregister_setting($this->domain, $this->options_name);
@@ -104,6 +119,9 @@ class Admin_WP_Mailto_Links {
 	public function admin_init() {
 		// register settings
 		register_setting($this->domain, $this->options_name);
+
+		// notice
+		add_action('admin_notices', array($this, 'show_notices'));
 	}
 
 	/**
@@ -115,12 +133,12 @@ class Admin_WP_Mailto_Links {
 		// add page and menu item
 		if ($this->options['own_admin_menu']) {
 		// create main menu item
-			$page_hook = add_menu_page(__('Mailto Links', $this->domain), __('Mailto Links', $this->domain),
+			$page_hook = add_menu_page(__('WP Mailto Links', $this->domain), __('WP Mailto Links', $this->domain),
 								'manage_options', $page, array($this, 'show_options_page'),
 								plugins_url('images/icon-wp-mailto-links-16.png', WP_MAILTO_LINKS_FILE));
 		} else {
 		// create submenu item under "Settings"
-			$page_hook = add_options_page(__('Mailto Links', $this->domain), __('Mailto Links', $this->domain),
+			$page_hook = add_options_page(__('WP Mailto Links', $this->domain), __('WP Mailto Links', $this->domain),
 								'manage_options', $page, array($this, 'show_options_page'));
 		}
 
@@ -131,6 +149,17 @@ class Admin_WP_Mailto_Links {
 	/* -------------------------------------------------------------------------
 	 *  Admin Options Page
 	 * ------------------------------------------------------------------------*/
+
+	/**
+	 * show notices
+	 */
+	public function show_notices() {
+		if ($_GET['page'] == sanitize_key($this->domain) && is_plugin_active('email-encoder-bundle/email-encoder-bundle.php')) {
+			echo '<div class="error fade"><p>';
+			_e('<strong>Warning:</strong> "Email Encoder Bundle"-plugin is also activated, which could cause conflicts on encoding email addresses and mailto links.', $this->domain);
+			echo '</p></div>';
+		}
+	}
 
 	/**
 	 * Load admin options page
@@ -399,9 +428,9 @@ class Admin_WP_Mailto_Links {
 		$screen->set_help_sidebar($this->get_help_text('sidebar'));
 
 		$screen->add_help_tab(array(
-			'id' => 'about',
-			'title'	=> __('About'),
-			'content' => $this->get_help_text('about'),
+			'id' => 'general',
+			'title'	=> __('General'),
+			'content' => $this->get_help_text('general'),
 		));
 		$screen->add_help_tab(array(
 			'id' => 'shortcodes',
@@ -414,9 +443,14 @@ class Admin_WP_Mailto_Links {
 			'content' => $this->get_help_text('templatefunctions'),
 		));
 		$screen->add_help_tab(array(
-			'id' => 'hooks',
-			'title'	=> __('Hooks'),
-			'content' => $this->get_help_text('hooks'),
+			'id' => 'actionhooks',
+			'title'	=> __('Action hook'),
+			'content' => $this->get_help_text('actionhooks'),
+		));
+		$screen->add_help_tab(array(
+			'id' => 'filterhooks',
+			'title'	=> __('Filter hook'),
+			'content' => $this->get_help_text('filterhooks'),
 		));
 	}
 
@@ -426,13 +460,14 @@ class Admin_WP_Mailto_Links {
 	 * @return string
 	 */
 	private function get_help_text($key) {
-		if ($key === 'about') {
+		if ($key === 'general') {
 			$plugin_title = get_admin_page_title();
 			$icon_url = plugins_url('images/icon-wp-mailto-links.png', WP_MAILTO_LINKS_FILE);
-			$content = <<<ABOUT
+			$content = <<<GENERAL
 <p><strong><img src="{$icon_url}" width="16" height="16" /> {$plugin_title} - version {$this->version}</strong></p>
 <p>Protect emailaddresses and manage mailto links on your site, set mail icon and styling.</p>
-ABOUT;
+<p><strong>Please <a href="http://wordpress.org/extend/plugins/wp-mailto-links/" target="_blank">rate this plugin</a> and vote if the plugin works.</strong></p>
+GENERAL;
 		} elseif ($key === 'shortcodes') {
 			$content = <<<SHORTCODES
 <p>Encode an email address:
@@ -442,14 +477,14 @@ SHORTCODES;
 		} elseif ($key === 'templatefunctions') {
 			$content = <<<TEMPLATEFUNCTIONS
 <p>Create a protected mailto link:
-<br/><code><&#63;php if (function_exists('wpml_mailto')) { echo wpml_mailto(\$display, [\$attrs]); } &#63;></code>
+<br/><code><&#63;php if (function_exists('wpml_mailto')) { echo wpml_mailto(\$display, \$attrs); } &#63;></code>
 </p>
 <p>Filter given content to protect mailto links, shortcodes and plain emails (according to the settings in admin):
 <br/><code><&#63;php if (function_exists('wpml_filter')) { echo wpml_filter(\$content); } &#63;></code>
 </p>
 TEMPLATEFUNCTIONS;
-		} elseif ($key === 'hooks') {
-			$content = <<<HOOKS
+		} elseif ($key === 'actionhooks') {
+			$content = <<<ACTIONHOOKS
 <p>Add extra code after plugin is ready on the site, f.e. to add extra filters:</p>
 <pre>
 function extra_filters(\$filter_callback, \$object) {
@@ -457,12 +492,22 @@ function extra_filters(\$filter_callback, \$object) {
 }
 add_action('wpml_ready', 'extra_filters');
 </pre>
-HOOKS;
+ACTIONHOOKS;
+		} elseif ($key === 'filterhooks') {
+			$content = <<<FILTERHOOKS
+<p>The wpml_mailto filter gives you the possibility to manipulate output of the mailto created by the plugin. F.e. make all mailto links bold:</p>
+<pre>
+public function special_mailto(\$link, \$display, \$email, \$attrs) {
+	return '&lt;b&gt;'. \$link .'&lt;/b&gt;';
+}
+add_filter('wpml_mailto', 'special_mailto', 10, 4);
+</pre>
+<p>Now all mailto links will be wrapped around a &lt;b&gt;-tag.</p>
+FILTERHOOKS;
 		} elseif ($key === 'sidebar') {
 			$content = <<<SIDEBAR
 <p>See <a href="http://wordpress.org/extend/plugins/wp-mailto-links/faq/" target="_blank">FAQ</a> at WordPress.org</p>
 <p>Send your <a href="http://www.freelancephp.net/contact/" target="_blank">question</a></p>
-<p><strong>Please <a href="http://wordpress.org/extend/plugins/wp-mailto-links/" target="_blank">rate this plugin</a> and vote if the plugin works.</strong></p>
 SIDEBAR;
 		}
 
