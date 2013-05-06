@@ -78,6 +78,9 @@ An alternative is using my other plugin for protecting your email addresses [Ema
 To create a protected mailto link in your template use:
 `<?php if (function_exists('wpml_mailto')) { echo wpml_mailto($display, $attrs); } ?>`
 
+Filter given content to protect mailto links, shortcodes and plain emails (according to the settings in admin):
+`<?php if (function_exists('wpml_filter')) { echo wpml_filter($content); } ?>`
+
 = Action hook =
 The plugin also has a hook when ready, f.e. to add extra filters:
 `function extra_filters($filter_callback, $object) {
