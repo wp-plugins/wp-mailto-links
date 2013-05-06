@@ -154,7 +154,7 @@ class Admin_WP_Mailto_Links {
 	 * show notices
 	 */
 	public function show_notices() {
-		if ($_GET['page'] == sanitize_key($this->domain) && is_plugin_active('email-encoder-bundle/email-encoder-bundle.php')) {
+		if (isset($_GET['page']) && $_GET['page'] == sanitize_key($this->domain) && is_plugin_active('email-encoder-bundle/email-encoder-bundle.php')) {
 			echo '<div class="error fade"><p>';
 			_e('<strong>Warning:</strong> "Email Encoder Bundle"-plugin is also activated, which could cause conflicts on encoding email addresses and mailto links.', $this->domain);
 			echo '</p></div>';
