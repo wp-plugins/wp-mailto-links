@@ -29,17 +29,14 @@ Although the plugin can scan mailto links automatically, you could also use the 
 
 = Support =
 This plugin has the same [requirements](http://wordpress.org/about/requirements/) as WordPress.
-If you are experiencing any problems, just take a look at the [FAQ](http://wordpress.org/extend/plugins/wp-mailto-links/faq/) or report it in the [support section](http://wordpress.org/support/plugin/wp-mailto-links).
-
-= Contact =
-You can send me a mail with [this contactform](http://www.freelancephp.net/contact/).
+If you are experiencing any problems, just take a look at the [FAQ](http://wordpress.org/extend/plugins/wp-mailto-links/faq/) or report it in the [support section](http://wordpress.org/support/plugin/wp-mailto-links). You can also send me a mail with [this contactform](http://www.freelancephp.net/contact/).
 
 = Like this plugin? =
-This plugin is completely free and does not need any donations. If you want to contribute you can do one of these actions:
+This plugin is free and does not need any donations. If you like, you could show your appreciation by:
 
-* Show your appreciation by rating this plugin
-* Click on a vote button of compatibility ("Works" / "Broken")
-* [Post a comment](http://www.freelancephp.net/email-encoder-php-class-wp-plugin/) on my blog
+* Rating this plugin
+* And/or clicking on the compatibility button ("Works"/"Broken")
+* And/or [posting a comment](http://www.freelancephp.net/email-encoder-php-class-wp-plugin/) on my blog
 
 == Installation ==
 
