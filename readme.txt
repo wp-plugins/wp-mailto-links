@@ -23,7 +23,7 @@ The plugin combines the best email protection methods explained in [this article
 After activating the plugin all options are already set for protecting your emails and mailto links. Optionally you can also set some style options, like adding an icon.
 
 Although the plugin can scan mailto links automatically, you could also use the shortcode:
-`[wpml_mailto href="info@myemail.com"]My Email[/wpml_mailto]`
+`[wpml_mailto href="mailto:info@myemail.com"]My Email[/wpml_mailto]`
 
 [See more documentation](http://wordpress.org/extend/plugins/wp-mailto-links/other_notes/).
 
@@ -33,7 +33,6 @@ If you are experiencing any problems, just take a look at the [FAQ](http://wordp
 
 = Like this plugin? =
 This plugin is free and does not need any donations. If you like, you could show your appreciation by:
-
 * Rating this plugin
 * And/or clicking on the compatibility button ("Works"/"Broken")
 * And/or [posting a comment](http://www.freelancephp.net/email-encoder-php-class-wp-plugin/) on my blog
