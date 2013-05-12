@@ -3,7 +3,7 @@ Contributors: freelancephp
 Tags: hide, email, emailaddress, mailto, link, antispam, protect, spambot, encode, encrypt, obfuscate, email icon, javascript
 Requires at least: 3.2.0
 Tested up to: 3.5.1
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 
 Protect email addresses and mailto links from spambots and being used for spamming. Easy to use without configuration.
 
@@ -23,7 +23,7 @@ The plugin combines the best email protection methods explained in [this article
 After activating the plugin all options are already set for protecting your emails and mailto links. Optionally you can also set some style options, like adding an icon.
 
 Although the plugin can scan mailto links automatically, you could also use the shortcode:
-`[wpml_mailto href="info@myemail.com"]My Email[/wpml_mailto]`
+`[wpml_mailto email="info@myemail.com"]My Email[/wpml_mailto]`
 
 [See more documentation](http://wordpress.org/extend/plugins/wp-mailto-links/other_notes/).
 
@@ -32,11 +32,7 @@ This plugin has the same [requirements](http://wordpress.org/about/requirements/
 If you are experiencing any problems, just take a look at the [FAQ](http://wordpress.org/extend/plugins/wp-mailto-links/faq/) or report it in the [support section](http://wordpress.org/support/plugin/wp-mailto-links). You can also send me a mail with [this contactform](http://www.freelancephp.net/contact/).
 
 = Like this plugin? =
-This plugin is free and does not need any donations. If you like, you could show your appreciation by:
-
-* Rating this plugin
-* And/or clicking on the compatibility button ("Works"/"Broken")
-* And/or [posting a comment](http://www.freelancephp.net/email-encoder-php-class-wp-plugin/) on my blog
+This plugin is free and does not need any donations. You could show your appreciation by rating this plugin and/or [posting a comment](http://www.freelancephp.net/email-encoder-php-class-wp-plugin/) on my blog.
 
 == Installation ==
 
@@ -71,8 +67,15 @@ An alternative is using my other plugin for protecting your email addresses [Ema
 
 == Documentation ==
 
+= Shortcode =
+Create a protected mailto link in your posts:
+`[wpml_mailto email="info@myemail.com"]My Email[/wpml_mailto]`
+
+It's also possible to add attributes to the mailto link, like a target:
+`[wpml_mailto email="info@myemail.com" target="_blank"]My Email[/wpml_mailto]`
+
 = Template functions =
-To create a protected mailto link in your template use:
+Create a protected mailto link in your template use:
 `<?php if (function_exists('wpml_mailto')) { echo wpml_mailto($display, $attrs); } ?>`
 
 Filter given content to protect mailto links, shortcodes and plain emails (according to the settings in admin):
@@ -95,6 +98,10 @@ add_filter('wpml_mailto', 'special_mailto', 10, 4);`
 Now all mailto links will be wrapped around a `<b>`-tag.
 
 == Changelog ==
+
+= 1.2.0 =
+* Added option to skip icons on mailtos containing image(s)
+* Added email attribute to mailto shortcode
 
 = 1.1.0 =
 * Added apply filter "wmpl_mailto"

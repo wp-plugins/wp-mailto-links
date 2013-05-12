@@ -250,6 +250,12 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 			$content = $this->get_protected_display($content);
 		}
 
+		// set "email" to "href"
+		if (isset($attrs['email'])) {
+			$attrs['href'] = 'mailto:'. $attrs['email'];
+			unset($attrs['email']);
+		}
+
 		return $this->protected_mailto($content, $attrs);
 	}
 
@@ -287,8 +293,9 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 		$email = null;
 		$class_ori = (empty($attrs['class'])) ? '' : $attrs['class'];
 
-		// set icon class, unless no-icon class isset or another icon class ('mail-icon-...') is found
-		if ($this->options['icon'] > 0 && (empty($this->options['no_icon_class']) || strpos($class_ori, $this->options['no_icon_class']) === FALSE) && strpos($class_ori, 'mail-icon-') === FALSE) {
+		// set icon class, unless no-icon class isset or another icon class ('mail-icon-...') is found and display does not contain image
+		if ($this->options['icon'] > 0 && (empty($this->options['no_icon_class']) || strpos($class_ori, $this->options['no_icon_class']) === FALSE)
+				&& strpos($class_ori, 'mail-icon-') === FALSE && !($this->options['image_no_icon'] == 1 && (bool) preg_match($this->regexps['<img>'], $display))) {
 			$icon_class = 'mail-icon-'. $this->options['icon'];
 
 			$attrs['class'] = (empty($attrs['class']))

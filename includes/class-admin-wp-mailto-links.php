@@ -12,7 +12,7 @@ class Admin_WP_Mailto_Links {
 	 * Current version
 	 * @var string
 	 */
-	protected $version = '1.1.0';
+	protected $version = '1.2.0';
 
 	/**
 	 * Used as prefix for options entry and could be used as text domain (for translations)
@@ -41,6 +41,7 @@ class Admin_WP_Mailto_Links {
 		'filter_head' => 1,
 		'protection_text' => '*protected email*',
 		'icon' => 0,
+		'image_no_icon' => 0,
 		'no_icon_class' => 'no-mail-icon',
 		'class_name' => 'mail-link',
 		'widget_logic_filter' => 0,
@@ -263,9 +264,6 @@ class Admin_WP_Mailto_Links {
 
 		if ($key === 'general_settings') {
 ?>
-			<?php if (is_plugin_active('email-encoder-bundle/email-encoder-bundle.php')): ?>
-				<p class="description"><?php _e('Warning: "Email Encoder Bundle"-plugin is also activated, which could cause conflicts.', $this->domain) ?></p>
-			<?php endif; ?>
 			<fieldset class="options">
 				<table class="form-table">
 				<tr>
@@ -348,6 +346,12 @@ class Admin_WP_Mailto_Links {
 					</td>
 				</tr>
 				<tr>
+					<th><?php _e('Skip images', $this->domain) ?></th>
+					<td><label><input type="checkbox" name="<?php echo $this->options_name ?>[image_no_icon]" value="1" <?php checked('1', (int) $options['image_no_icon']); ?> />
+						<span><?php _e('Do not show icon for mailto links containing an image', $this->domain) ?></span></label>
+					</td>
+				</tr>
+				<tr>
 					<th><?php _e('No-icon Class', $this->domain) ?></th>
 					<td><label><input type="text" id="<?php echo $this->options_name ?>[no_icon_class]" name="<?php echo $this->options_name ?>[no_icon_class]" value="<?php echo $options['no_icon_class']; ?>" />
 						<span class="description"><?php _e('Use this class when a mailto link should not show an icon', $this->domain) ?></span></label>
@@ -384,7 +388,7 @@ class Admin_WP_Mailto_Links {
 ?>
 			<h4><img src="<?php echo plugins_url('images/icon-wp-external-links.png', WP_MAILTO_LINKS_FILE) ?>" width="16" height="16" /> <?php _e('WP External Links', $this->domain) ?> -
 				<?php if (is_plugin_active('wp-external-links/wp-external-links.php')): ?>
-					<a href="<?php echo get_bloginfo('url') ?>/wp-admin/options-general.php?page=wp-external-links/wp-external-links.php"><?php _e('Settings') ?></a>
+					<a href="<?php echo get_bloginfo('url') ?>/wp-admin/admin.php?page=wp_external_links"><?php _e('Settings') ?></a>
 				<?php elseif( file_exists( WP_PLUGIN_DIR . '/wp-external-links/wp-external-links.php')): ?>
 					<a href="<?php echo get_bloginfo('url') ?>/wp-admin/plugins.php?plugin_status=inactive"><?php _e('Activate', $this->domain) ?></a>
 				<?php else: ?>
@@ -397,7 +401,7 @@ class Admin_WP_Mailto_Links {
 
 			<h4><img src="<?php echo plugins_url('images/icon-email-encoder-bundle.png', WP_MAILTO_LINKS_FILE) ?>" width="16" height="16" /> <?php _e('Email Encoder Bundle', $this->domain) ?> -
 				<?php if (is_plugin_active('email-encoder-bundle/email-encoder-bundle.php')): ?>
-					<a href="<?php echo get_bloginfo('url') ?>/wp-admin/options-general.php?page=email-encoder-bundle/email-encoder-bundle.php"><?php _e('Settings') ?></a>
+					<a href="<?php echo get_bloginfo('url') ?>/wp-admin/admin.php?page=email-encoder-bundle/email-encoder-bundle.php"><?php _e('Settings') ?></a>
 				<?php elseif( file_exists( WP_PLUGIN_DIR . '/email-encoder-bundle/email-encoder-bundle.php')): ?>
 					<a href="<?php echo get_bloginfo('url') ?>/wp-admin/plugins.php?plugin_status=inactive"><?php _e('Activate', $this->domain) ?></a>
 				<?php else: ?>
@@ -465,13 +469,16 @@ class Admin_WP_Mailto_Links {
 			$icon_url = plugins_url('images/icon-wp-mailto-links.png', WP_MAILTO_LINKS_FILE);
 			$content = <<<GENERAL
 <p><strong><img src="{$icon_url}" width="16" height="16" /> {$plugin_title} - version {$this->version}</strong></p>
-<p>Protect emailaddresses and manage mailto links on your site, set mail icon and styling.</p>
-<p><strong>Please <a href="http://wordpress.org/extend/plugins/wp-mailto-links/" target="_blank">rate this plugin</a> and vote if the plugin works.</strong></p>
+<p>Protect your email addresses (automatically) and manage mailto links on your site, set mail icon, styling and more.</p>
+<p><strong>Please <a href="http://wordpress.org/extend/plugins/wp-mailto-links/" target="_blank">rate this plugin</a>.</strong></p>
 GENERAL;
 		} elseif ($key === 'shortcodes') {
 			$content = <<<SHORTCODES
-<p>Encode an email address:
-<br/><code>[wpml_mailto href="info@myemail.com"]My Email[/wpml_mailto]</code>
+<p>Create a protected mailto link in your posts:
+<br/><code>[wpml_mailto email="info@myemail.com"]My Email[/wpml_mailto]</code>
+</p>
+<p>It's also possible to add attributes to the mailto link, like a target:
+<br/><code>[wpml_mailto email="info@myemail.com" target="_blank"]My Email[/wpml_mailto]</code>
 </p>
 SHORTCODES;
 		} elseif ($key === 'templatefunctions') {
@@ -506,8 +513,12 @@ add_filter('wpml_mailto', 'special_mailto', 10, 4);
 FILTERHOOKS;
 		} elseif ($key === 'sidebar') {
 			$content = <<<SIDEBAR
-<p>See <a href="http://wordpress.org/extend/plugins/wp-mailto-links/faq/" target="_blank">FAQ</a> at WordPress.org</p>
-<p>Send your <a href="http://www.freelancephp.net/contact/" target="_blank">question</a></p>
+<h4>Support</h4>
+<ul>
+	<li><a href="http://wordpress.org/extend/plugins/wp-mailto-links/faq/" target="_blank">FAQ</a></li>
+	<li><a href="http://wordpress.org/support/plugin/wp-mailto-links" target="_blank">Report a problem</a></li>
+	<li><a href="http://www.freelancephp.net/contact/" target="_blank">Send a question</a></li>
+</ul>
 SIDEBAR;
 		}
 
