@@ -1,4 +1,4 @@
-=== WP Mailto Links - Obfuscate Email Adresses ===
+=== WP Mailto Links - Obfuscate Email Addresses ===
 Contributors: freelancephp
 Tags: hide, email, email address, mailto, link, antispam, protect, spambot, encode, encrypt, obfuscate, email icon, javascript
 Requires at least: 3.2.0
