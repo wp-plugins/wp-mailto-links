@@ -1,9 +1,9 @@
-=== WP Mailto Links ===
+=== WP Mailto Links - Obfuscate Email Adresses ===
 Contributors: freelancephp
-Tags: hide, email, emailaddress, mailto, link, antispam, protect, spambot, encode, encrypt, obfuscate, email icon, javascript
+Tags: hide, email, email address, mailto, link, antispam, protect, spambot, encode, encrypt, obfuscate, email icon, javascript
 Requires at least: 3.2.0
-Tested up to: 3.5.1
-Stable tag: 1.2.0
+Tested up to: 3.8.0
+Stable tag: 1.2.1
 
 Protect email addresses and mailto links from spambots and being used for spamming. Easy to use without configuration.
 
@@ -12,7 +12,7 @@ Protect your email addresses (automatically) and manage mailto links on your sit
 
 = Features =
 * Protect mailto links (automatically or shortcode)
-* Protect plain emailaddresses or convert them to mailto links
+* Protect plain email addresses or convert them to mailto links
 * Set mail icon
 * Set classes (for your own styling)
 * Set no-icon class
@@ -32,7 +32,7 @@ This plugin has the same [requirements](http://wordpress.org/about/requirements/
 If you are experiencing any problems, just take a look at the [FAQ](http://wordpress.org/extend/plugins/wp-mailto-links/faq/) or report it in the [support section](http://wordpress.org/support/plugin/wp-mailto-links). You can also send me a mail with [this contactform](http://www.freelancephp.net/contact/).
 
 = Like this plugin? =
-This plugin is free and does not need any donations. You could show your appreciation by rating this plugin and/or [posting a comment](http://www.freelancephp.net/email-encoder-php-class-wp-plugin/) on my blog.
+Please [rate this plugin](http://wordpress.org/support/view/plugin-reviews/wp-mailto-links) or [post a comment](http://www.freelancephp.net/wp-mailto-links/) on my blog.
 
 == Installation ==
 
@@ -99,6 +99,11 @@ Now all mailto links will be wrapped around a `<b>`-tag.
 
 == Changelog ==
 
+= 1.2.1 =
+* Solved bug opening mailto links in iOS (iphone)
+* Solved bug deleting setting values when unregister (will now be deleted on uninstall)
+* Solved bug for option "Yes, convert plain emails to mailto links"
+
 = 1.2.0 =
 * Added option to skip icons on mailtos containing image(s)
 * Added email attribute to mailto shortcode
@@ -107,7 +112,7 @@ Now all mailto links will be wrapped around a `<b>`-tag.
 * Added apply filter "wmpl_mailto"
 * Changed filter_page method using only one regular expressions
 * Added ob_end_flush to the wp_footer filter
-* Fixed bug replacing plain emailaddresses
+* Fixed bug replacing plain email addresses
 
 = 1.0.3 =
 * Fixed php warning "call_user_func_array() expects parameter 1.."
@@ -149,7 +154,7 @@ Now all mailto links will be wrapped around a `<b>`-tag.
 = 0.22 =
 * Added support for widget_content filter of the Logic Widget plugin
 * Changed script attribute `language` to `type`
-* Displayed name will only be encrypted when containing emailaddress(es)
+* Displayed name will only be encrypted when containing email address(es)
 
 = 0.21 =
 * Fixed problem of not showing the first letter

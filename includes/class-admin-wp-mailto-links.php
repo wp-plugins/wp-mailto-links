@@ -1,18 +1,19 @@
-<?php
-if (!class_exists('Admin_WP_Mailto_Links')):
+<?php defined('ABSPATH') OR die('No direct access.');
 
 /**
  * Class Admin_WP_Mailto_Links
  * @package WP_Mailto_Links
  * @category WordPress Plugins
  */
+if (!class_exists('Admin_WP_Mailto_Links')):
+
 class Admin_WP_Mailto_Links {
 
 	/**
 	 * Current version
 	 * @var string
 	 */
-	protected $version = '1.2.0';
+	protected $version = '1.2.1';
 
 	/**
 	 * Used as prefix for options entry and could be used as text domain (for translations)
@@ -56,9 +57,7 @@ class Admin_WP_Mailto_Links {
 		$this->set_options();
 
 		// set uninstall hook
-		if (function_exists('register_deactivation_hook')) {
-			register_deactivation_hook(WP_MAILTO_LINKS_FILE, array($this, 'deactivation'));
-		}
+    	register_uninstall_hook(WP_MAILTO_LINKS_FILE, array('Admin_WP_Mailto_Links', 'uninstall'));
 
 		// add actions
 		add_action('admin_init', array($this, 'admin_init'));
@@ -107,9 +106,9 @@ class Admin_WP_Mailto_Links {
 	}
 
 	/**
-	 * Deactivation plugin
+	 * Uninstall Callback
 	 */
-	public function deactivation() {
+	public static function uninstall() {
 		delete_option($this->options_name);
 		unregister_setting($this->domain, $this->options_name);
 	}
@@ -123,7 +122,25 @@ class Admin_WP_Mailto_Links {
 
 		// notice
 		add_action('admin_notices', array($this, 'show_notices'));
+
+        add_filter('plugin_action_links', array($this, 'plugin_action_links'), 10, 2);
 	}
+
+    /**
+     * Callback add links on plugin page
+     * @param array $links
+     * @param string $file
+     * @return array
+     */
+    public function plugin_action_links($links, $file) {
+        if ($file == plugin_basename(WP_MAILTO_LINKS_FILE)) {
+            $page = ($this->options['own_admin_menu']) ? 'admin.php' : 'options-general.php';
+            $settings_link = '<a href="' . get_bloginfo('wpurl') . '/wp-admin/' . $page . '?page=wp_mailto_links">' . __('Settings', $this->domain) . '</a>';
+            array_unshift($links, $settings_link);
+        }
+
+        return $links;
+    }
 
 	/**
 	 * admin_menu action
@@ -221,7 +238,7 @@ class Admin_WP_Mailto_Links {
 			<div class="icon32" id="icon-options-custom" style="background:url(<?php echo plugins_url('images/icon-wp-mailto-links.png', WP_MAILTO_LINKS_FILE) ?>) no-repeat 50% 50%"><br></div>
 			<h2><?php echo get_admin_page_title() ?></h2>
 
-			<?php if ($this->options['own_admin_menu'] && isset($_GET['settings-updated']) && $_GET['settings-updated'] == 'true'): ?>
+            <?php if (isset($_GET['settings-updated']) && $_GET['settings-updated'] == 'true' && $this->options['own_admin_menu']): ?>
 			<div class="updated settings-error" id="setting-error-settings_updated">
 				<p><strong><?php _e('Settings saved.' ) ?></strong></p>
 			</div>

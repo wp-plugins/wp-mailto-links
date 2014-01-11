@@ -1,14 +1,16 @@
-<?php
-if (!class_exists('WP_Mailto_Links')):
-
-// load dependency
-require_once dirname(WP_MAILTO_LINKS_FILE) . '/includes/class-admin-wp-mailto-links.php';
+<?php defined('ABSPATH') OR die('No direct access.');
 
 /**
  * Class WP_Mailto_Links
+ *
+ * @extends Admin_WP_Mailto_Links
+ * @description Contains all nescessary code for the site part
+ *
  * @package WP_Mailto_Links
  * @category WordPress Plugins
  */
+if (!class_exists('WP_Mailto_Links')):
+
 class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 
 	/**
@@ -212,7 +214,8 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 	 * @return string
 	 */
 	public function callback_convert_plain_email($match) {
-		return $this->protected_mailto($match[0], array('href' => 'mailto:' . $match[0]));
+		$content = $this->protected_mailto($match[0], array('href' => 'mailto:' . $match[0]));
+        return $content;
 	}
 
 	/**
@@ -256,7 +259,9 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 			unset($attrs['email']);
 		}
 
-		return $this->protected_mailto($content, $attrs);
+		$content = $this->protected_mailto($content, $attrs);
+
+		return $content;
 	}
 
 	/* -------------------------------------------------------------------------
@@ -343,6 +348,9 @@ class WP_Mailto_Links extends Admin_WP_Mailto_Links {
 
 		// filter
 		$link = apply_filters('wpml_mailto', $link, $display, $email, $attrs);
+
+        // just in case there are still email addresses f.e. within title-tag
+		$link = $this->replace_plain_emails($link);
 
 		return $link;
 	}
