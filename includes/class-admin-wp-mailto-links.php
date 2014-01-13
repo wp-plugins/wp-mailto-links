@@ -13,7 +13,7 @@ class Admin_WP_Mailto_Links {
 	 * Current version
 	 * @var string
 	 */
-	protected $version = '1.2.1';
+	protected $version = '1.2.2';
 
 	/**
 	 * Used as prefix for options entry and could be used as text domain (for translations)

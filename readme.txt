@@ -3,7 +3,7 @@ Contributors: freelancephp
 Tags: hide, email, email address, mailto, link, antispam, protect, spambot, encode, encrypt, obfuscate, email icon, javascript
 Requires at least: 3.2.0
 Tested up to: 3.8.0
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 
 Protect email addresses and mailto links from spambots and being used for spamming. Easy to use without configuration.
 
@@ -98,6 +98,9 @@ add_filter('wpml_mailto', 'special_mailto', 10, 4);`
 Now all mailto links will be wrapped around a `<b>`-tag.
 
 == Changelog ==
+
+= 1.2.2 =
+* Fixed bug PHP fatal error include path
 
 = 1.2.1 =
 * Solved bug opening mailto links in iOS (iphone)
