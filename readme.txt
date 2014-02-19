@@ -1,21 +1,21 @@
-=== WP Mailto Links - Obfuscate Email Addresses ===
+=== WP Mailto Links - Manage Email Links ===
 Contributors: freelancephp
 Tags: hide, email, email address, mailto, link, antispam, protect, spambot, encode, encrypt, obfuscate, email icon, javascript
-Requires at least: 3.2.0
-Tested up to: 3.8.0
-Stable tag: 1.2.2
+Requires at least: 3.4.0
+Tested up to: 3.8.1
+Stable tag: 1.3.0
 
 Protect email addresses and mailto links from spambots and being used for spamming. Easy to use without configuration.
 
 == Description ==
-Protect your email addresses (automatically) and manage mailto links on your site, set mail icon, styling and more.
+Protect your email addresses and manage mailto links on your site, set mail icon, styling and more.
 
 = Features =
 * Protect mailto links (automatically or shortcode)
 * Protect plain email addresses or convert them to mailto links
 * Set mail icon
-* Set classes (for your own styling)
-* Set no-icon class
+* RSS feed protection
+* And more...
 
 The plugin combines the best email protection methods explained in [this article](http://perishablepress.com/press/2010/08/01/best-method-for-email-obfuscation/) by Jeff Starr.
 
@@ -43,6 +43,28 @@ Please [rate this plugin](http://wordpress.org/support/view/plugin-reviews/wp-ma
 1. The plugin sets by default the right options for protecting your emails. All mailto links will automatically be scanned and protected.
 
 == Frequently Asked Questions ==
+
+= Prefilled form field for emailaddress contains weird value. How to solve? =
+
+A prefilled form field that contains an emailaddress is also being protected by the plugin. The protection code is causing a weird value.
+This can be solved by excluding that particular page from being processed by the plugin. See answer of the next question how to do that.
+
+= How can I exclude pages? =
+
+You can exclude pages from being processed by adding a condition to the filter. Put this code in the `functions.php` and replace the values of `$exclude_pages` to the page ID's you would like to exclude.
+
+`function special_mailto($link, $display, $email, $attrs) {
+    global $post;
+    $exclude_pages = array(18, 22);
+
+    if (in_array($post->ID, $exclude_pages)) {
+        // use html entity to prevent replacing email by protection text
+        return str_replace('@', '@', $email);
+    }
+
+    return $link;
+}
+add_filter('wpml_mailto', 'special_mailto', 10, 4);`
 
 = Shortcode does not work in widgets. How can I make it work? =
 By default shortcodes are not applied to (text) widgets. To support that you can add it to the text widget filter ([for more](http://www.wprecipes.com/how-to-add-shortcodes-in-sidebar-widgets)).
@@ -84,14 +106,14 @@ Filter given content to protect mailto links, shortcodes and plain emails (accor
 = Action hook =
 The plugin also has a hook when ready, f.e. to add extra filters:
 `function extra_filters($filter_callback, $object) {
-	add_filter('some_filter', $filter_callback);
+    add_filter('some_filter', $filter_callback);
 }
 add_action('wpml_ready', 'extra_filters');`
 
 = Filter hook =
 The wpml_mailto filter gives you the possibility to manipulate output of the mailto created by the plugin. F.e. make all mailto links bold:
 `public function special_mailto($link, $display, $email, $attrs) {
-	return '<b>'. $link .'</b>';
+    return '<b>'. $link .'</b>';
 }
 add_filter('wpml_mailto', 'special_mailto', 10, 4);`
 
@@ -99,13 +121,19 @@ Now all mailto links will be wrapped around a `<b>`-tag.
 
 == Changelog ==
 
+= 1.3.0 =
+* Only support for WP 3.4+
+* Removed stylesheet file to save extra request
+* Fixed bug saving metaboxes settings
+* Added prefix to css class names
+
 = 1.2.2 =
 * Fixed bug PHP fatal error include path
 
 = 1.2.1 =
-* Solved bug opening mailto links in iOS (iphone)
-* Solved bug deleting setting values when unregister (will now be deleted on uninstall)
-* Solved bug for option "Yes, convert plain emails to mailto links"
+* Fixed bug opening mailto links in iOS (iphone)
+* Fixed bug deleting setting values when unregister (will now be deleted on uninstall)
+* Fixed bug for option "Yes, convert plain emails to mailto links"
 
 = 1.2.0 =
 * Added option to skip icons on mailtos containing image(s)
