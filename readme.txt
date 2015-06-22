@@ -2,8 +2,8 @@
 Contributors: freelancephp
 Tags: hide, email, email address, mailto, link, antispam, protect, spambot, encode, encrypt, obfuscate, email icon, javascript
 Requires at least: 3.6.0
-Tested up to: 4.1.1
-Stable tag: 1.5.0
+Tested up to: 4.2.2
+Stable tag: 1.6.0
 
 Protect email addresses and mailto links from spambots and being used for spamming. Easy to use without configuration.
 
@@ -16,6 +16,7 @@ Protect your email addresses and manage mailto links on your site, set mail icon
 * Protect RSS feed
 * Set mail icon
 * Use shortcodes, template functions, action and filter hooks
+* Compatible with WPMU (Multisite)
 
 The plugin combines the best email protection methods explained in [this article](http://perishablepress.com/press/2010/08/01/best-method-for-email-obfuscation/) by Jeff Starr.
 
@@ -129,6 +130,11 @@ add_filter('wpml_mailto', 'special_mailto', 10, 4);`
 Now all mailto links will be wrapped around a `<b>`-tag.
 
 == Changelog ==
+
+= 1.6.0 =
+* Added option strong protection for emails in input fields
+* JavaScript depends on jQuery
+* Solved $wp_version missing error
 
 = 1.5.0 =
 * Secure JS encoding for input fields

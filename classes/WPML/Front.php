@@ -71,7 +71,7 @@ class WPML_Front
             // set js file
             if ($this->optionValues['protect']) {
                 wp_enqueue_script('wp-mailto-links',
-                    WPML::url('js/wp-mailto-links.js'), array(),
+                    WPML::url('js/wp-mailto-links.js'), array('jquery'),
                     WPML::get('version'));
             }
 
@@ -262,14 +262,18 @@ class WPML_Front
 
         $encodedEmail = $this->getEncEmail($email);
 
-        // add data-enc-email after "<input"
-        $encodedInput = '';
-        $encodedInput .= substr($input, 0, 6);
-        $encodedInput .= ' data-enc-email="' . $encodedEmail . '"';
-        $encodedInput .= substr($input, 6);
+        if ($this->optionValues['input_strong_protection'] == 1) {
+            // add data-enc-email after "<input"
+            $encodedInput .= substr($input, 0, 6);
+            $encodedInput .= ' data-enc-email="' . $encodedEmail . '"';
+            $encodedInput .= substr($input, 6);
 
-        // remove email from value attribute
-        $encodedInput = str_replace($email, '', $encodedInput);
+            // remove email from value attribute
+            $encodedInput = str_replace($email, '', $encodedInput);
+        } else {
+            // replace email in value attribute
+            $encodedInput = str_replace($email, antispambot($email), $input);
+        }
 
         return $encodedInput;
     }
